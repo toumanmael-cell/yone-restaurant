@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yone Restaurant - Assistant</title>
+  <title>Yone — Assistant de commande</title>
 
   <style>
     * {
@@ -19,92 +19,124 @@
 
     .app {
       max-width: 700px;
+      height: 100vh;
       margin: auto;
-      min-height: 100vh;
       background: white;
       display: flex;
       flex-direction: column;
     }
 
-    header {
+    .header {
       background: #111;
       color: white;
-      padding: 22px;
+      padding: 18px;
       text-align: center;
     }
 
-    header h1 {
-      margin: 0 0 6px;
-      font-size: 28px;
+    .header h1 {
+      margin: 0;
+      font-size: 25px;
     }
 
-    header p {
-      margin: 0;
-      opacity: .8;
+    .header p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      opacity: 0.8;
     }
 
     #chat {
       flex: 1;
-      padding: 18px;
       overflow-y: auto;
+      padding: 15px;
+      background: #fafafa;
     }
 
     .message {
-      padding: 13px 15px;
-      border-radius: 16px;
-      margin-bottom: 12px;
-      max-width: 90%;
-      line-height: 1.5;
+      max-width: 88%;
+      padding: 12px 14px;
+      margin: 8px 0;
+      border-radius: 15px;
       white-space: pre-line;
+      line-height: 1.45;
     }
 
     .yone {
-      background: #f0f0f0;
+      background: #eeeeee;
       margin-right: auto;
+      border-bottom-left-radius: 4px;
     }
 
-    .user {
+    .client {
       background: #111;
       color: white;
       margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      border-top: 1px solid #eee;
+      background: white;
+    }
+
+    .quick-actions button {
+      border: 1px solid #ddd;
+      background: white;
+      padding: 9px 12px;
+      border-radius: 20px;
+      cursor: pointer;
     }
 
     .input-area {
       display: flex;
       gap: 8px;
-      padding: 12px;
+      padding: 10px;
       border-top: 1px solid #ddd;
       background: white;
-      position: sticky;
-      bottom: 0;
     }
 
-    input {
+    #messageInput {
       flex: 1;
-      padding: 14px;
       border: 1px solid #ccc;
-      border-radius: 12px;
-      font-size: 16px;
+      border-radius: 22px;
+      padding: 12px 15px;
       outline: none;
+      font-size: 15px;
     }
 
-    button {
+    #sendButton {
       border: none;
       background: #111;
       color: white;
+      border-radius: 22px;
       padding: 0 18px;
-      border-radius: 12px;
-      font-size: 16px;
       cursor: pointer;
     }
 
-    button:hover {
-      opacity: .85;
+    .menu-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 7px 0;
     }
 
-    .total {
+    .menu-name {
       font-weight: bold;
-      font-size: 18px;
+    }
+
+    .menu-price {
+      color: #555;
+      margin-top: 3px;
+    }
+
+    .category-title {
+      font-weight: bold;
+      margin-top: 12px;
+      font-size: 17px;
     }
   </style>
 </head>
@@ -113,12 +145,20 @@
 
 <div class="app">
 
-  <header>
+  <div class="header">
     <h1>YONE 🍣</h1>
-    <p>Assistant de commande</p>
-  </header>
+    <p>Assistant de commande — Casablanca</p>
+  </div>
 
   <div id="chat"></div>
+
+  <div class="quick-actions">
+    <button onclick="envoyerRapide('Menu')">📋 Menu</button>
+    <button onclick="envoyerRapide('Sushi')">🍣 Sushi</button>
+    <button onclick="envoyerRapide('Poké')">🥗 Poké</button>
+    <button onclick="envoyerRapide('Boissons')">🥤 Boissons</button>
+    <button onclick="envoyerRapide('Ma commande')">🛒 Ma commande</button>
+  </div>
 
   <div class="input-area">
     <input
@@ -127,815 +167,1410 @@
       placeholder="Écrivez votre commande..."
       autocomplete="off"
     >
-    <button onclick="envoyer()">Envoyer</button>
+    <button id="sendButton" onclick="envoyer()">Envoyer</button>
   </div>
 
 </div>
 
+
 <script>
 
-/* =========================================================
-   CONFIGURATION
-========================================================= */
-
-const whatsappRestaurant = "212712633358";
-
-
-/* =========================================================
-   MENU COMPLET YONE
-========================================================= */
-
-const menu = [
-
-  /* SIGNATURE */
-  {nom:"amai", prix:70, categorie:"Signature"},
-  {nom:"pinchu", prix:55, categorie:"Signature"},
-  {nom:"truffalo", prix:75, categorie:"Signature"},
-  {nom:"okinawa", prix:60, categorie:"Signature"},
-  {nom:"bouddaha", prix:60, categorie:"Signature"},
-  {nom:"vitello", prix:65, categorie:"Signature"},
-  {nom:"umicrisp", prix:65, categorie:"Signature"},
-  {nom:"gyu", prix:85, categorie:"Signature"},
-  {nom:"cheese", prix:60, categorie:"Signature"},
-  {nom:"oyshi", prix:70, categorie:"Signature"},
-  {nom:"kana", prix:55, categorie:"Signature"},
-  {nom:"roll mystère 4p", prix:50, categorie:"Signature"},
-  {nom:"roll mystère 6p", prix:65, categorie:"Signature"},
-
-  /* AROMAKI */
-  {nom:"aromaki saumon", prix:65, categorie:"Aromaki"},
-  {nom:"aromaki crabe", prix:65, categorie:"Aromaki"},
-  {nom:"aromaki mango", prix:65, categorie:"Aromaki"},
-  {nom:"aromaki mosaïque", prix:65, categorie:"Aromaki"},
-  {nom:"aromaki shake yaki", prix:65, categorie:"Aromaki"},
-
-  /* CALIFORNIA / FRESH */
-  {nom:"philly", prix:40, categorie:"California"},
-  {nom:"tiger", prix:35, categorie:"California"},
-  {nom:"tanuki", prix:55, categorie:"California"},
-  {nom:"yasuo", prix:60, categorie:"California"},
-  {nom:"fresh saumon", prix:55, categorie:"Fresh Roll"},
-  {nom:"sésame", prix:40, categorie:"California"},
-  {nom:"shake yaki", prix:40, categorie:"California"},
-  {nom:"king crabe", prix:55, categorie:"California"},
-  {nom:"yone", prix:60, categorie:"California"},
-  {nom:"fresh thon", prix:50, categorie:"Fresh Roll"},
-
-  /* MAKI */
-  {nom:"maki saumon", prix:40, categorie:"Maki"},
-  {nom:"maki ebi", prix:35, categorie:"Maki"},
-  {nom:"maki avocat", prix:30, categorie:"Maki"},
-  {nom:"maki thon", prix:40, categorie:"Maki"},
-  {nom:"maki anguille", prix:45, categorie:"Maki"},
-  {nom:"maki crabe", prix:40, categorie:"Maki"},
-
-  /* NIGIRI */
-  {nom:"nigiri avocat", prix:30, categorie:"Nigiri"},
-  {nom:"nigiri crevettes", prix:35, categorie:"Nigiri"},
-  {nom:"nigiri anguille", prix:40, categorie:"Nigiri"},
-  {nom:"nigiri thon rouge", prix:35, categorie:"Nigiri"},
-  {nom:"nigiri saumon", prix:35, categorie:"Nigiri"},
-  {nom:"nigiri saumon flambé", prix:40, categorie:"Nigiri"},
-
-  /* FRY */
-  {nom:"dragon eye", prix:60, categorie:"Fry"},
-  {nom:"ebi fry", prix:50, categorie:"Fry"},
-  {nom:"shaki", prix:65, categorie:"Fry"},
-  {nom:"tuna fry", prix:60, categorie:"Fry"},
-  {nom:"yakuza", prix:60, categorie:"Maki Fry"},
-  {nom:"chizuto", prix:55, categorie:"Maki Fry"},
-  {nom:"sango", prix:60, categorie:"Maki Fry"},
-
-  /* TACO */
-  {nom:"taco sushi thon rouge", prix:60, categorie:"Taco Sushi"},
-  {nom:"taco sushi pollo", prix:55, categorie:"Taco Sushi"},
-  {nom:"taco sushi saumon", prix:65, categorie:"Taco Sushi"},
-  {nom:"taco sushi shrooms", prix:65, categorie:"Taco Sushi"},
-
-  /* PIZZA */
-  {nom:"pizza sushi saumon", prix:65, categorie:"Pizza Sushi"},
-  {nom:"pizza sushi yaki", prix:60, categorie:"Pizza Sushi"},
-  {nom:"pizza sushi tuna", prix:70, categorie:"Pizza Sushi"},
-
-  /* ONIGIRI */
-  {nom:"onigiri crevettes 1p", prix:25, categorie:"Onigiri"},
-  {nom:"onigiri crevettes 2p", prix:40, categorie:"Onigiri"},
-  {nom:"onigiri saumon cheese 1p", prix:30, categorie:"Onigiri"},
-  {nom:"onigiri saumon cheese 2p", prix:45, categorie:"Onigiri"},
-  {nom:"onigiri poulet bangbang 1p", prix:25, categorie:"Onigiri"},
-  {nom:"onigiri poulet bangbang 2p", prix:40, categorie:"Onigiri"},
-
-  /* ASSORTIMENTS */
-  {nom:"nigiri 14p", prix:140, categorie:"Assortiment"},
-  {nom:"smart 14p", prix:120, categorie:"Assortiment"},
-  {nom:"fry neo 14p", prix:135, categorie:"Assortiment"},
-  {nom:"deluxe 14p", prix:150, categorie:"Assortiment"},
-  {nom:"yone 24p", prix:260, categorie:"Assortiment"},
-  {nom:"satori 24p", prix:240, categorie:"Assortiment"},
-  {nom:"full classic 24p", prix:220, categorie:"Assortiment"},
-  {nom:"fry heaven 24p", prix:200, categorie:"Assortiment"},
-  {nom:"salmon lover 23p", prix:220, categorie:"Assortiment"},
-  {nom:"fly 22p", prix:165, categorie:"Assortiment"},
-  {nom:"perle de yone 37p", prix:390, categorie:"Assortiment"},
-  {nom:"trésor du chef 54p", prix:490, categorie:"Assortiment"},
-
-  /* SASHIMI */
-  {nom:"tartare yone", prix:75, categorie:"Tartare"},
-  {nom:"tartare saumon", prix:70, categorie:"Tartare"},
-  {nom:"chirashi mixte", prix:80, categorie:"Chirashi"},
-  {nom:"chirashi saumon", prix:80, categorie:"Chirashi"},
-  {nom:"chirashi thon", prix:80, categorie:"Chirashi"},
-  {nom:"sashimi saumon", prix:60, categorie:"Sashimi"},
-  {nom:"sashimi thon", prix:55, categorie:"Sashimi"},
-  {nom:"tataki saumon", prix:70, categorie:"Tataki"},
-  {nom:"tataki thon", prix:65, categorie:"Tataki"},
-  {nom:"tiradito mixte", prix:85, categorie:"Tiradito"},
-  {nom:"tiradito saumon gravlax", prix:90, categorie:"Tiradito"},
-  {nom:"tiradito thon", prix:80, categorie:"Tiradito"},
-
-  /* POKE */
-  {nom:"poke tasty m", prix:75, categorie:"Poké"},
-  {nom:"poke tasty l", prix:120, categorie:"Poké"},
-  {nom:"poke du chef m", prix:75, categorie:"Poké"},
-  {nom:"poke du chef l", prix:120, categorie:"Poké"},
-  {nom:"poke gourmand m", prix:60, categorie:"Poké"},
-  {nom:"poke gourmand l", prix:105, categorie:"Poké"},
-  {nom:"poke du chef fry m", prix:70, categorie:"Poké"},
-  {nom:"poke du chef fry l", prix:110, categorie:"Poké"},
-  {nom:"poke yone m", prix:70, categorie:"Poké"},
-  {nom:"poke yone l", prix:115, categorie:"Poké"},
-  {nom:"poke deluxe m", prix:80, categorie:"Poké"},
-  {nom:"poke deluxe l", prix:130, categorie:"Poké"},
-
-  /* SALADES */
-  {nom:"wakame", prix:65, categorie:"Salade"},
-  {nom:"salade yone", prix:70, categorie:"Salade"},
-  {nom:"bobun", prix:65, categorie:"Salade"},
-  {nom:"nawatori", prix:65, categorie:"Salade"},
-  {nom:"quinoa happy", prix:60, categorie:"Salade"},
-  {nom:"senshi poulet", prix:75, categorie:"Salade"},
-  {nom:"senshi fruits de mer", prix:90, categorie:"Salade"},
-
-  /* SOUPES */
-  {nom:"ravioli poulet", prix:60, categorie:"Soupe"},
-  {nom:"soupe fruits de mer", prix:65, categorie:"Soupe"},
-  {nom:"pékinoise", prix:60, categorie:"Soupe"},
-  {nom:"tomyum", prix:60, categorie:"Soupe"},
-
-  /* YAKITORI */
-  {nom:"yakitori poulet grillé", prix:40, categorie:"Yakitori"},
-  {nom:"yakitori boulettes de poulet", prix:40, categorie:"Yakitori"},
-  {nom:"yakitori boeuf fromage", prix:50, categorie:"Yakitori"},
-  {nom:"yakitori boeuf fromage fry", prix:55, categorie:"Yakitori"},
-  {nom:"yakitori crevettes grillé", prix:45, categorie:"Yakitori"},
-  {nom:"yakitori saumon grillé", prix:60, categorie:"Yakitori"},
-  {nom:"yakitori mixte 6p", prix:150, categorie:"Yakitori"},
-  {nom:"légumes sautés", prix:15, categorie:"Extra"},
-
-  /* BENTO */
-  {nom:"bento foodie", prix:145, categorie:"Bento"},
-  {nom:"bento thrill", prix:150, categorie:"Bento"},
-  {nom:"bento inclusive", prix:135, categorie:"Bento"},
-  {nom:"bento light neo", prix:150, categorie:"Bento"},
-  {nom:"bento spécial", prix:160, categorie:"Bento"},
-
-  /* MIDI */
-  {nom:"formule strike", prix:120, categorie:"Midi"},
-  {nom:"formule smart", prix:100, categorie:"Midi"},
-
-  /* WOK */
-  {nom:"wok nouilles veggie", prix:55, categorie:"Wok"},
-  {nom:"wok nouilles poulet", prix:70, categorie:"Wok"},
-  {nom:"wok nouilles boeuf", prix:80, categorie:"Wok"},
-  {nom:"wok nouilles crevettes", prix:80, categorie:"Wok"},
-  {nom:"wok nouilles fruits de mer", prix:85, categorie:"Wok"},
-
-  {nom:"riz cantonais veggie", prix:55, categorie:"Riz"},
-  {nom:"riz cantonais poulet", prix:70, categorie:"Riz"},
-  {nom:"riz cantonais boeuf", prix:80, categorie:"Riz"},
-  {nom:"riz cantonais crevettes", prix:80, categorie:"Riz"},
-  {nom:"riz cantonais fruits de mer", prix:85, categorie:"Riz"},
-
-  {nom:"wok riz à part veggie", prix:50, categorie:"Wok"},
-  {nom:"wok riz à part poulet", prix:65, categorie:"Wok"},
-  {nom:"wok riz à part boeuf", prix:75, categorie:"Wok"},
-  {nom:"wok riz à part crevettes", prix:75, categorie:"Wok"},
-  {nom:"wok riz à part fruits de mer", prix:80, categorie:"Wok"},
-
-  /* PLATS DU CHEF */
-  {nom:"tagliatelles à l'asiatique", prix:90, categorie:"Chef"},
-  {nom:"pad thai", prix:90, categorie:"Chef"},
-  {nom:"saumon curry", prix:130, categorie:"Chef"},
-  {nom:"chimichurri boeuf", prix:130, categorie:"Chef"},
-  {nom:"poulet noix de cajou", prix:75, categorie:"Chef"},
-  {nom:"poulet coréen m", prix:60, categorie:"Chef"},
-  {nom:"poulet coréen l", prix:80, categorie:"Chef"},
-
-  /* BURGERS / BAO */
-  {nom:"sushi burger saumon", prix:80, categorie:"Burger"},
-  {nom:"sushi burger thon", prix:80, categorie:"Burger"},
-  {nom:"bao fusion", prix:55, categorie:"Bao"},
-  {nom:"bao latino", prix:55, categorie:"Bao"},
-  {nom:"chicken yasashii", prix:65, categorie:"Burger"},
-  {nom:"chicken coleslaw", prix:65, categorie:"Burger"},
-  {nom:"samurai meal", prix:70, categorie:"Burger"},
-  {nom:"samurai meal gratiné", prix:80, categorie:"Burger"},
-  {nom:"crunchy 2p", prix:60, categorie:"Taco"},
-  {nom:"mechoui 2p", prix:65, categorie:"Taco"},
-
-  /* SIDES */
-  {nom:"dim sum poulet", prix:45, categorie:"Side"},
-  {nom:"dim sum veggie", prix:40, categorie:"Side"},
-  {nom:"dim sum crevettes", prix:50, categorie:"Side"},
-  {nom:"tempura crevettes", prix:40, categorie:"Side"},
-  {nom:"crevettes bang bang", prix:45, categorie:"Side"},
-  {nom:"gyoza saumon poêlé", prix:65, categorie:"Side"},
-  {nom:"gyoza toryufu fried", prix:70, categorie:"Side"},
-  {nom:"nems thai poulet", prix:45, categorie:"Side"},
-  {nom:"nems thai crevettes", prix:50, categorie:"Side"},
-  {nom:"rouleaux de printemps veggie", prix:35, categorie:"Side"},
-  {nom:"rouleaux de printemps mixte", prix:45, categorie:"Side"},
-  {nom:"bol de riz blanc", prix:10, categorie:"Extra"},
-  {nom:"bol de riz vinaigré", prix:20, categorie:"Extra"},
-  {nom:"edamame sel", prix:30, categorie:"Extra"},
-  {nom:"edamame spicy", prix:35, categorie:"Extra"},
-
-  /* COCKTAILS */
-  {nom:"tropical love", prix:40, categorie:"Cocktail"},
-  {nom:"smoothie exotique", prix:40, categorie:"Cocktail"},
-  {nom:"passion laseda", prix:40, categorie:"Cocktail"},
-  {nom:"pina colada", prix:40, categorie:"Cocktail"},
-  {nom:"strawberry delight", prix:40, categorie:"Cocktail"},
-  {nom:"cocktail du jour", prix:45, categorie:"Cocktail"},
-  {nom:"virgin mojito", prix:35, categorie:"Cocktail"},
-  {nom:"virgin mojito fruits rouges", prix:45, categorie:"Cocktail"},
-
-  /* ICE TEA */
-  {nom:"ice tea fruits rouges", prix:35, categorie:"Boisson"},
-  {nom:"ice tea citron", prix:40, categorie:"Boisson"},
-  {nom:"ice tea pêche", prix:40, categorie:"Boisson"},
-
-  /* DETOX */
-  {nom:"detox green", prix:40, categorie:"Detox"},
-  {nom:"detox red", prix:40, categorie:"Detox"},
-  {nom:"citron gingembre", prix:35, categorie:"Detox"},
-  {nom:"citron gingembre miel", prix:40, categorie:"Detox"},
-  {nom:"citron gingembre ananas", prix:40, categorie:"Detox"},
-
-  /* CAFE FROID */
-  {nom:"frappuccino", prix:40, categorie:"Café"},
-  {nom:"iced coffee", prix:25, categorie:"Café"},
-  {nom:"spanish latte", prix:30, categorie:"Café"},
-
-  /* CAFE CHAUD */
-  {nom:"café crème", prix:25, categorie:"Café"},
-  {nom:"cappuccino", prix:25, categorie:"Café"},
-  {nom:"cappuccino viennois", prix:30, categorie:"Café"},
-  {nom:"chocolat fondu", prix:30, categorie:"Café"},
-  {nom:"chocolat fondu aromatisé", prix:35, categorie:"Café"},
-  {nom:"machiatto", prix:35, categorie:"Café"},
-  {nom:"expresso", prix:20, categorie:"Café"},
-  {nom:"expresso affogato", prix:30, categorie:"Café"},
-
-  /* SODAS / EAUX */
-  {nom:"soda 33cl", prix:15, categorie:"Boisson"},
-  {nom:"eau minérale 50cl", prix:12, categorie:"Boisson"},
-  {nom:"eau minérale 0,75cl verre", prix:25, categorie:"Boisson"},
-  {nom:"oulmès 25cl", prix:20, categorie:"Boisson"},
-  {nom:"oulmès 50cl", prix:15, categorie:"Boisson"},
-  {nom:"oulmès 1l", prix:25, categorie:"Boisson"},
-  {nom:"infusion", prix:35, categorie:"Boisson"},
-
-  /* DESSERTS */
-  {nom:"banoffee pie banane", prix:35, categorie:"Dessert"},
-  {nom:"banoffee pie mori", prix:45, categorie:"Dessert"},
-  {nom:"fondant chocolat", prix:45, categorie:"Dessert"},
-  {nom:"fondant matcha", prix:65, categorie:"Dessert"},
-  {nom:"brownie matcha", prix:55, categorie:"Dessert"},
-  {nom:"brownie chocolat", prix:40, categorie:"Dessert"},
-  {nom:"crème brulée vanille", prix:40, categorie:"Dessert"},
-  {nom:"boule de glace", prix:15, categorie:"Dessert"}
-
-];
-
-
-/* =========================================================
-   VARIABLES
-========================================================= */
-
-let commande = [];
-let etape = "commande";
-let client = {
-  nom: "",
-  telephone: "",
-  adresse: ""
-};
-
-
-/* =========================================================
-   OUTILS
-========================================================= */
-
-function normaliser(texte) {
-  return texte
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "'")
-    .trim();
-}
-
-
-function ajouterMessage(texte, type = "yone") {
-
-  const chat = document.getElementById("chat");
-
-  const div = document.createElement("div");
-
-  div.className = "message " + type;
-
-  div.textContent = texte;
-
-  chat.appendChild(div);
-
-  chat.scrollTop = chat.scrollHeight;
-}
-
-
-function trouverQuantite(texte) {
-
-  const chiffres = texte.match(/\b([1-9]|10)\b/);
-
-  if (chiffres) {
-    return parseInt(chiffres[1]);
-  }
-
-  const nombres = {
-    "un":1,
-    "une":1,
-    "deux":2,
-    "trois":3,
-    "quatre":4,
-    "cinq":5,
-    "six":6,
-    "sept":7,
-    "huit":8,
-    "neuf":9,
-    "dix":10
-  };
-
-  const mots = normaliser(texte).split(/\s+/);
-
-  for (const mot of mots) {
-    if (nombres[mot]) {
-      return nombres[mot];
-    }
-  }
-
-  return 1;
-}
-
-
-/* =========================================================
-   RECHERCHE PRODUIT
-========================================================= */
-
-function trouverProduit(texte) {
-
-  const t = normaliser(texte);
-
-  let produits = [...menu];
-
-  /*
-    On essaie d'abord les noms les plus longs.
-    Cela évite par exemple que "maki saumon"
-    soit trouvé avant une expression plus précise.
-  */
-
-  produits.sort((a,b) =>
-    normaliser(b.nom).length - normaliser(a.nom).length
-  );
-
-  for (const produit of produits) {
-
-    const nom = normaliser(produit.nom);
-
-    if (t.includes(nom)) {
-      return produit;
-    }
-  }
-
-  /*
-    Quelques raccourcis naturels
-  */
-
-  const correspondances = [
-    ["maki saumon", "maki saumon"],
-    ["saumon maki", "maki saumon"],
-    ["maki ebi", "maki ebi"],
-    ["soda", "soda 33cl"],
-    ["eau", "eau minérale 50cl"],
-    ["pad thai", "pad thai"],
-    ["poulet noix de cajou", "poulet noix de cajou"],
-    ["chicken yasashii", "chicken yasashii"]
+  /* =========================================================
+     CONFIGURATION
+  ========================================================= */
+
+  const whatsappRestaurant = "212712633358";
+
+
+  /* =========================================================
+     MENU YONE
+  ========================================================= */
+
+  const menu = [
+
+    /* SIGNATURE & AROMAKI */
+    {nom:"Amai", prix:70, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Pinchu", prix:55, categorie:"Signature & Aromaki", pieces:"4p"},
+    {nom:"Truffalo", prix:75, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Okinawa", prix:60, categorie:"Signature & Aromaki", pieces:"4p"},
+    {nom:"Bouddaha", prix:60, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Vitello", prix:65, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Umicrisp", prix:65, categorie:"Signature & Aromaki", pieces:"4p"},
+    {nom:"Gyu", prix:85, categorie:"Signature & Aromaki", pieces:"8p"},
+    {nom:"Cheese", prix:60, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Oyshi", prix:70, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Kana", prix:55, categorie:"Signature & Aromaki", pieces:"4p"},
+    {nom:"Roll mystère", prix:65, categorie:"Signature & Aromaki", pieces:"4p/6p"},
+    {nom:"Saumon Aromaki", prix:65, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Crabe Aromaki", prix:65, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Mango Aromaki", prix:65, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Mosaïque Aromaki", prix:65, categorie:"Signature & Aromaki", pieces:"6p"},
+    {nom:"Shake yaki Aromaki", prix:65, categorie:"Signature & Aromaki", pieces:"6p"},
+
+    /* CALIFORNIA / FRESH ROLL */
+    {nom:"Philly", prix:40, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Tiger", prix:35, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Tanuki", prix:55, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Yasuo", prix:60, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Fresh Saumon", prix:55, categorie:"California & Fresh Roll", pieces:"5p"},
+    {nom:"Sésame", prix:40, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Shake Yaki", prix:40, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"King Crabe", prix:55, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Yone", prix:60, categorie:"California & Fresh Roll", pieces:"4p"},
+    {nom:"Fresh Thon", prix:50, categorie:"California & Fresh Roll", pieces:"5p"},
+
+    /* MAKI */
+    {nom:"Maki Saumon", prix:40, categorie:"Maki", pieces:"6p"},
+    {nom:"Maki Ebi", prix:35, categorie:"Maki", pieces:"6p"},
+    {nom:"Maki Avocat", prix:30, categorie:"Maki", pieces:"6p"},
+    {nom:"Maki Thon", prix:40, categorie:"Maki", pieces:"6p"},
+    {nom:"Maki Anguille", prix:45, categorie:"Maki", pieces:"6p"},
+    {nom:"Maki Crabe", prix:40, categorie:"Maki", pieces:"6p"},
+
+    /* NIGIRI */
+    {nom:"Nigiri Avocat", prix:30, categorie:"Nigiri", pieces:"2p"},
+    {nom:"Nigiri Crevettes", prix:35, categorie:"Nigiri", pieces:"2p"},
+    {nom:"Nigiri Anguille", prix:40, categorie:"Nigiri", pieces:"2p"},
+    {nom:"Nigiri Thon rouge", prix:35, categorie:"Nigiri", pieces:"2p"},
+    {nom:"Nigiri Saumon", prix:35, categorie:"Nigiri", pieces:"2p"},
+    {nom:"Nigiri Saumon flambé", prix:40, categorie:"Nigiri", pieces:"2p"},
+
+    /* FRIED SUSHI */
+    {nom:"Dragon eye", prix:60, categorie:"Fried Sushi", pieces:"6p"},
+    {nom:"Ebi fry", prix:50, categorie:"Fried Sushi", pieces:"6p"},
+    {nom:"Shaki", prix:65, categorie:"Fried Sushi", pieces:"6p"},
+    {nom:"Tuna", prix:60, categorie:"Fried Sushi", pieces:"6p"},
+    {nom:"Yakuza", prix:60, categorie:"Maki fry", pieces:"6p"},
+    {nom:"Chizuto", prix:55, categorie:"Maki fry", pieces:"6p"},
+    {nom:"Sango", prix:60, categorie:"Maki fry", pieces:"6p"},
+
+    /* TACO */
+    {nom:"Taco sushi Thon rouge", prix:60, categorie:"Taco Sushi", pieces:"3p"},
+    {nom:"Taco sushi Pollo", prix:55, categorie:"Taco Sushi", pieces:"3p"},
+    {nom:"Taco sushi Saumon", prix:65, categorie:"Taco Sushi", pieces:"3p"},
+    {nom:"Taco sushi Shrooms", prix:65, categorie:"Taco Sushi", pieces:"3p"},
+
+    /* PIZZA SUSHI */
+    {nom:"Pizza sushi Saumon", prix:65, categorie:"Pizza Sushi", pieces:"6p"},
+    {nom:"Pizza sushi Yaki", prix:60, categorie:"Pizza Sushi", pieces:"6p"},
+    {nom:"Pizza sushi Tuna", prix:70, categorie:"Pizza Sushi", pieces:"6p"},
+
+    /* ONIGIRI */
+    {nom:"Onigiri Crevettes", prix:40, categorie:"Onigiri", pieces:"2p"},
+    {nom:"Onigiri Saumon & cheese", prix:45, categorie:"Onigiri", pieces:"2p"},
+    {nom:"Onigiri Poulet bangbang", prix:40, categorie:"Onigiri", pieces:"2p"},
+
+    /* ASSORTIMENTS */
+    {nom:"Nigiri", prix:140, categorie:"Assortiments", pieces:"14p"},
+    {nom:"Smart", prix:120, categorie:"Assortiments", pieces:"14p"},
+    {nom:"Fry Neo", prix:135, categorie:"Assortiments", pieces:"14p"},
+    {nom:"Deluxe", prix:150, categorie:"Assortiments", pieces:"14p"},
+    {nom:"Yone", prix:260, categorie:"Assortiments", pieces:"24p"},
+    {nom:"Satori", prix:240, categorie:"Assortiments", pieces:"24p"},
+    {nom:"Full Classic", prix:220, categorie:"Assortiments", pieces:"24p"},
+    {nom:"Fry Heaven", prix:200, categorie:"Assortiments", pieces:"24p"},
+    {nom:"Salmon Lover", prix:220, categorie:"Assortiments", pieces:"23p"},
+    {nom:"Fly", prix:165, categorie:"Assortiments", pieces:"22p"},
+    {nom:"Perle de Yone", prix:390, categorie:"Assortiments", pieces:"37p"},
+    {nom:"Trésor du chef", prix:490, categorie:"Assortiments", pieces:"54p"},
+
+    /* SASHIMI */
+    {nom:"Tartare Yone", prix:75, categorie:"Sashimi & Co"},
+    {nom:"Tartare Saumon", prix:70, categorie:"Sashimi & Co"},
+    {nom:"Chirashi Mixte", prix:80, categorie:"Sashimi & Co"},
+    {nom:"Chirashi Saumon", prix:80, categorie:"Sashimi & Co"},
+    {nom:"Chirashi Thon", prix:80, categorie:"Sashimi & Co"},
+    {nom:"Sashimi Saumon", prix:60, categorie:"Sashimi & Co"},
+    {nom:"Sashimi Thon", prix:55, categorie:"Sashimi & Co"},
+    {nom:"Tataki Saumon", prix:70, categorie:"Sashimi & Co"},
+    {nom:"Tataki Thon", prix:65, categorie:"Sashimi & Co"},
+    {nom:"Tiradito Mixte", prix:85, categorie:"Sashimi & Co"},
+    {nom:"Tiradito Saumon gravlax", prix:90, categorie:"Sashimi & Co"},
+    {nom:"Tiradito Thon", prix:80, categorie:"Sashimi & Co"},
+
+    /* POKE */
+    {nom:"Tasty", prix:75, prixL:120, categorie:"Poké Bowl"},
+    {nom:"Du chef", prix:75, prixL:120, categorie:"Poké Bowl"},
+    {nom:"Gourmand", prix:60, prixL:105, categorie:"Poké Bowl"},
+    {nom:"Du chef fry", prix:70, prixL:110, categorie:"Poké Bowl"},
+    {nom:"Yone Poké", prix:70, prixL:115, categorie:"Poké Bowl"},
+    {nom:"Deluxe Poké", prix:80, prixL:130, categorie:"Poké Bowl"},
+
+    /* SALADES */
+    {nom:"Wakame", prix:65, categorie:"Salades"},
+    {nom:"Yone Salade", prix:70, categorie:"Salades"},
+    {nom:"Bobun", prix:65, categorie:"Salades"},
+    {nom:"Nawatori", prix:65, categorie:"Salades"},
+    {nom:"Quinoa Happy", prix:60, categorie:"Salades"},
+    {nom:"Senshi poulet", prix:75, categorie:"Salades"},
+    {nom:"Senshi fruits de mer", prix:90, categorie:"Salades"},
+
+    /* SOUPES */
+    {nom:"Ravioli poulet", prix:60, categorie:"Soupes"},
+    {nom:"Fruits de mer", prix:65, categorie:"Soupes"},
+    {nom:"Pékinoise", prix:60, categorie:"Soupes"},
+    {nom:"Tomyum", prix:60, categorie:"Soupes"},
+
+    /* YAKITORI */
+    {nom:"Poulet grillé", prix:40, categorie:"Yakitori"},
+    {nom:"Boulettes de poulet", prix:40, categorie:"Yakitori"},
+    {nom:"Boeuf fromage", prix:50, categorie:"Yakitori"},
+    {nom:"Boeuf fromage fry", prix:55, categorie:"Yakitori"},
+    {nom:"Crevettes grillé", prix:45, categorie:"Yakitori"},
+    {nom:"Saumon grillé", prix:60, categorie:"Yakitori"},
+    {nom:"Yakitori mixte", prix:150, categorie:"Yakitori", pieces:"6p"},
+    {nom:"Légumes sautés", prix:15, categorie:"Yakitori"},
+
+    /* BENTO */
+    {nom:"Foodie", prix:145, categorie:"Bento"},
+    {nom:"Thrill", prix:150, categorie:"Bento"},
+    {nom:"Inclusive", prix:135, categorie:"Bento"},
+    {nom:"Light neo", prix:150, categorie:"Bento"},
+    {nom:"Spécial", prix:160, categorie:"Bento"},
+
+    /* FORMULES */
+    {nom:"Strike", prix:120, categorie:"Formules midi"},
+    {nom:"Smart", prix:100, categorie:"Formules midi"},
+
+    /* WOK */
+    {nom:"Nouilles Veggie", prix:55, categorie:"Wok & Riz"},
+    {nom:"Riz cantonais Veggie", prix:55, categorie:"Wok & Riz"},
+    {nom:"Wok Veggie", prix:50, categorie:"Wok & Riz"},
+    {nom:"Nouilles Poulet", prix:70, categorie:"Wok & Riz"},
+    {nom:"Riz cantonais Poulet", prix:70, categorie:"Wok & Riz"},
+    {nom:"Wok Poulet", prix:65, categorie:"Wok & Riz"},
+    {nom:"Nouilles Boeuf", prix:80, categorie:"Wok & Riz"},
+    {nom:"Riz cantonais Boeuf", prix:80, categorie:"Wok & Riz"},
+    {nom:"Wok Boeuf", prix:75, categorie:"Wok & Riz"},
+    {nom:"Nouilles Crevettes", prix:80, categorie:"Wok & Riz"},
+    {nom:"Riz cantonais Crevettes", prix:80, categorie:"Wok & Riz"},
+    {nom:"Wok Crevettes", prix:75, categorie:"Wok & Riz"},
+    {nom:"Nouilles Fruits de mer", prix:85, categorie:"Wok & Riz"},
+    {nom:"Riz cantonais Fruits de mer", prix:85, categorie:"Wok & Riz"},
+    {nom:"Wok Fruits de mer", prix:80, categorie:"Wok & Riz"},
+
+    /* PLATS DU CHEF */
+    {nom:"Tagliatelles à l’asiatique", prix:90, categorie:"Plats du chef"},
+    {nom:"Pad thai", prix:90, categorie:"Plats du chef"},
+    {nom:"Saumon curry", prix:130, categorie:"Plats du chef"},
+    {nom:"Chimichurri boeuf", prix:130, categorie:"Plats du chef"},
+    {nom:"P. Noix de cajou", prix:75, categorie:"Plats du chef"},
+    {nom:"Poulet coréen M", prix:60, prixL:80, categorie:"Plats du chef"},
+
+    /* BURGERS & BAO */
+    {nom:"S.Burger Saumon", prix:80, categorie:"Burgers & Bao"},
+    {nom:"S.Burger Thon", prix:80, categorie:"Burgers & Bao"},
+    {nom:"Bao Fusion", prix:55, categorie:"Burgers & Bao"},
+    {nom:"Bao Latino", prix:55, categorie:"Burgers & Bao"},
+    {nom:"Chicken Yasashii", prix:65, categorie:"Burgers & Bao"},
+    {nom:"Chicken Coleslaw", prix:65, categorie:"Burgers & Bao"},
+    {nom:"Samurai Meal", prix:70, prixL:80, categorie:"Burgers & Bao"},
+    {nom:"Crunchy", prix:60, categorie:"Burgers & Bao", pieces:"2p"},
+    {nom:"Mechoui", prix:65, categorie:"Burgers & Bao", pieces:"2p"},
+
+    /* SIDES */
+    {nom:"Dim sum Poulet", prix:45, categorie:"Sides & Extras", pieces:"4p"},
+    {nom:"Dim sum Veggie", prix:40, categorie:"Sides & Extras", pieces:"4p"},
+    {nom:"Dim sum Crevettes", prix:50, categorie:"Sides & Extras", pieces:"4p"},
+    {nom:"Crevettes Tempura", prix:40, categorie:"Sides & Extras"},
+    {nom:"Crevettes Bang bang", prix:45, categorie:"Sides & Extras"},
+    {nom:"Gyoza Saumon poêlé", prix:65, categorie:"Sides & Extras", pieces:"4p"},
+    {nom:"Gyoza Toryufu fried", prix:70, categorie:"Sides & Extras", pieces:"4p"},
+    {nom:"Nems thai Poulet", prix:45, categorie:"Sides & Extras", pieces:"3p"},
+    {nom:"Nems thai Crevettes", prix:50, categorie:"Sides & Extras", pieces:"3p"},
+    {nom:"Rouleaux de printemps Veggie", prix:35, categorie:"Sides & Extras", pieces:"6p"},
+    {nom:"Rouleaux de printemps Mixte", prix:45, categorie:"Sides & Extras", pieces:"6p"},
+    {nom:"Bol de riz blanc", prix:10, categorie:"Sides & Extras"},
+    {nom:"Bol de riz vinaigré", prix:20, categorie:"Sides & Extras"},
+    {nom:"Edamame sel", prix:30, categorie:"Sides & Extras"},
+    {nom:"Edamame spicy", prix:35, categorie:"Sides & Extras"},
+
+    /* BOISSONS */
+    {nom:"Tropical Love", prix:40, categorie:"Boissons"},
+    {nom:"Smoothie Exotique", prix:40, categorie:"Boissons"},
+    {nom:"Passion Laseda", prix:40, categorie:"Boissons"},
+    {nom:"Piña Colada", prix:40, categorie:"Boissons"},
+    {nom:"Strawberry Delight", prix:40, categorie:"Boissons"},
+    {nom:"Cocktail du jour", prix:45, categorie:"Boissons"},
+    {nom:"Virgin mojito", prix:35, categorie:"Boissons"},
+    {nom:"Virgin mojito aux fruits rouges", prix:45, categorie:"Boissons"},
+    {nom:"Ice Tea Fruits rouges", prix:35, categorie:"Boissons"},
+    {nom:"Ice Tea Citron", prix:40, categorie:"Boissons"},
+    {nom:"Ice Tea Pêche", prix:40, categorie:"Boissons"},
+    {nom:"Detox Green", prix:40, categorie:"Boissons"},
+    {nom:"Detox Red", prix:40, categorie:"Boissons"},
+    {nom:"Citron gingembre", prix:35, categorie:"Boissons"},
+    {nom:"Citron gingembre miel", prix:40, categorie:"Boissons"},
+    {nom:"Citron gingembre ananas", prix:40, categorie:"Boissons"},
+    {nom:"Frappuccino", prix:40, categorie:"Boissons"},
+    {nom:"Iced Coffee", prix:25, categorie:"Boissons"},
+    {nom:"Spanish latte", prix:30, categorie:"Boissons"},
+    {nom:"Café crème", prix:25, categorie:"Boissons"},
+    {nom:"Cappuccino", prix:25, categorie:"Boissons"},
+    {nom:"Cappuccino viennois", prix:30, categorie:"Boissons"},
+    {nom:"Chocolat fondu", prix:30, categorie:"Boissons"},
+    {nom:"Chocolat fondu aromatisé", prix:35, categorie:"Boissons"},
+    {nom:"Machiatto", prix:35, categorie:"Boissons"},
+    {nom:"Expresso", prix:20, categorie:"Boissons"},
+    {nom:"Expresso affogato", prix:30, categorie:"Boissons"},
+    {nom:"Soda 33cl", prix:15, categorie:"Boissons"},
+    {nom:"Eau minérale 50cl", prix:12, categorie:"Boissons"},
+    {nom:"Eau minérale 0,75cl verre", prix:25, categorie:"Boissons"},
+    {nom:"Eau gazeuse Oulmès 25cl", prix:20, categorie:"Boissons"},
+    {nom:"Eau gazeuse Oulmès 50cl", prix:15, categorie:"Boissons"},
+    {nom:"Eau gazeuse Oulmès 1L", prix:25, categorie:"Boissons"},
+    {nom:"Infusion", prix:35, categorie:"Boissons"},
+
+    /* DESSERTS */
+    {nom:"Banoffee pie Banane", prix:35, categorie:"Desserts"},
+    {nom:"Banoffee pie Mori", prix:45, categorie:"Desserts"},
+    {nom:"Fondant Chocolat", prix:45, categorie:"Desserts"},
+    {nom:"Fondant Matcha", prix:65, categorie:"Desserts"},
+    {nom:"Brownie Matcha", prix:55, categorie:"Desserts"},
+    {nom:"Brownie Chocolat", prix:40, categorie:"Desserts"},
+    {nom:"Crème brulée Vanille", prix:40, categorie:"Desserts"},
+    {nom:"Boule de glace", prix:15, categorie:"Desserts"}
+
   ];
 
-  for (const [mot, produitNom] of correspondances) {
 
-    if (t.includes(normaliser(mot))) {
+  /* =========================================================
+     FIN PARTIE 1
+  ========================================================= */<script>
 
-      return menu.find(
-        p => normaliser(p.nom) === normaliser(produitNom)
-      );
-    }
+  /* =========================================================
+     ÉTAT DE LA COMMANDE
+  ========================================================= */
+
+  let panier = [];
+
+  let client = {
+    nom: "",
+    telephone: "",
+    adresse: ""
+  };
+
+  let etape = "commande";
+
+
+  /* =========================================================
+     OUTILS
+  ========================================================= */
+
+  function normaliser(texte) {
+    return texte
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
   }
 
-  return null;
-}
 
+  function ajouterMessage(message, type = "yone") {
 
-/* =========================================================
-   PANIER
-========================================================= */
+    const chat = document.getElementById("chat");
 
-function afficherCommande() {
+    const div = document.createElement("div");
 
-  if (commande.length === 0) {
-    return "Votre panier est vide.";
+    div.className = "message " + type;
+
+    div.textContent = message;
+
+    chat.appendChild(div);
+
+    chat.scrollTop = chat.scrollHeight;
   }
 
-  let texte = "🧾 Votre commande :\n\n";
 
-  let total = 0;
+  function envoyerRapide(message) {
 
-  commande.forEach(item => {
+    document.getElementById("messageInput").value = message;
 
-    const sousTotal = item.prix * item.quantite;
-
-    total += sousTotal;
-
-    texte +=
-      "🍽️ " +
-      item.quantite +
-      " × " +
-      item.nom +
-      " — " +
-      sousTotal +
-      " DH\n";
-  });
-
-  texte += "\n💰 Total : " + total + " DH";
-
-  return texte;
-}
+    envoyer();
+  }
 
 
-function calculerTotal() {
+  function envoyer() {
 
-  return commande.reduce(
-    (total, item) =>
-      total + item.prix * item.quantite,
-    0
-  );
-}
+    const input = document.getElementById("messageInput");
 
+    const texte = input.value.trim();
 
-/* =========================================================
-   MESSAGE WHATSAPP
-========================================================= */
+    if (!texte) return;
 
-function creerMessageWhatsApp() {
+    ajouterMessage(texte, "client");
 
-  let message = "🍽️ NOUVELLE COMMANDE YONE\n\n";
+    input.value = "";
 
-  commande.forEach(item => {
-
-    message +=
-      item.quantite +
-      " × " +
-      item.nom +
-      " — " +
-      (item.prix * item.quantite) +
-      " DH\n";
-  });
-
-  message += "\n💰 TOTAL : " + calculerTotal() + " DH\n\n";
-
-  message += "👤 CLIENT : " + client.nom + "\n";
-  message += "📱 TÉLÉPHONE : " + client.telephone + "\n";
-  message += "📍 ADRESSE : " + client.adresse + "\n\n";
-
-  message += "✅ Commande confirmée depuis Yone.";
-
-  return message;
-}
+    traiterMessage(texte);
+  }
 
 
-/* =========================================================
-   ENVOI DU MESSAGE
-========================================================= */
+  function trouverQuantite(texte) {
 
-function envoyer() {
-
-  const input = document.getElementById("messageInput");
-
-  const texte = input.value.trim();
-
-  if (!texte) return;
-
-  ajouterMessage(texte, "user");
-
-  input.value = "";
-
-  traiterMessage(texte);
-}
-
-
-/* =========================================================
-   LOGIQUE PRINCIPALE
-========================================================= */
-
-function traiterMessage(texte) {
-
-  /* -------------------------
-     ÉTAPE COMMANDE
-  ------------------------- */
-
-  if (etape === "commande") {
-
-    const produit = trouverProduit(texte);
-
-    if (!produit) {
-
-      ajouterMessage(
-        "Je n'ai pas trouvé ce produit dans le menu 😕\n\n" +
-        "Vous pouvez me donner le nom du plat ou de la boisson que vous souhaitez commander."
-      );
-
-      return;
-    }
-
-    const quantite = trouverQuantite(texte);
-
-    commande.push({
-      nom: produit.nom,
-      prix: produit.prix,
-      quantite: quantite
-    });
-
-    ajouterMessage(
-      "Excellent choix 😋\n\n" +
-      "🍽️ " +
-      quantite +
-      " × " +
-      produit.nom +
-      " — " +
-      (produit.prix * quantite) +
-      " DH\n\n" +
-      "Souhaitez-vous ajouter autre chose ?"
+    const match = normaliser(texte).match(
+      /\b(\d+)\b/
     );
 
-    etape = "ajouter";
+    if (!match) return 1;
 
-    return;
+    const nombre = parseInt(match[1]);
+
+    if (nombre < 1) return 1;
+
+    if (nombre > 50) return 50;
+
+    return nombre;
   }
 
 
-  /* -------------------------
-     ÉTAPE AJOUT
-  ------------------------- */
+  function trouverProduit(texte) {
 
-  if (etape === "ajouter") {
+    const recherche = normaliser(texte);
 
-    const t = normaliser(texte);
+    let meilleur = null;
 
-    if (
-      t.includes("non") ||
-      t.includes("c'est tout") ||
-      t.includes("c est tout") ||
-      t.includes("rien") ||
-      t.includes("terminer") ||
-      t.includes("fini")
-    ) {
+    let meilleurScore = 0;
 
-      ajouterMessage(
-        afficherCommande() +
-        "\n\n👤 Pour continuer, indiquez votre nom."
-      );
+    for (const produit of menu) {
 
-      etape = "nom";
+      const nom = normaliser(produit.nom);
 
-      return;
+      if (
+        recherche === nom ||
+        recherche.includes(nom) ||
+        nom.includes(recherche)
+      ) {
+
+        let score = nom.length;
+
+        if (recherche.includes(nom)) {
+          score += 100;
+        }
+
+        if (score > meilleurScore) {
+          meilleur = produit;
+          meilleurScore = score;
+        }
+      }
     }
 
-    const produit = trouverProduit(texte);
+    /* Quelques recherches naturelles */
 
-    if (produit) {
+    const alias = [
 
-      const quantite = trouverQuantite(texte);
+      ["pad thai", "Pad thai"],
+      ["maki saumon", "Maki Saumon"],
+      ["maki thon", "Maki Thon"],
+      ["maki avocat", "Maki Avocat"],
+      ["maki crevette", "Maki Ebi"],
+      ["maki ebi", "Maki Ebi"],
+      ["soda", "Soda 33cl"],
+      ["eau", "Eau minérale 50cl"],
+      ["burger saumon", "S.Burger Saumon"],
+      ["burger thon", "S.Burger Thon"],
+      ["bao fusion", "Bao Fusion"],
+      ["bao latino", "Bao Latino"],
+      ["tartare saumon", "Tartare Saumon"],
+      ["poke yone", "Yone Poké"],
+      ["poke deluxe", "Deluxe Poké"]
+    ];
 
-      commande.push({
-        nom: produit.nom,
-        prix: produit.prix,
+
+    for (const [mot, nomProduit] of alias) {
+
+      if (recherche.includes(normaliser(mot))) {
+
+        const produit = menu.find(
+          p => normaliser(p.nom) === normaliser(nomProduit)
+        );
+
+        if (produit) return produit;
+      }
+    }
+
+    return meilleur;
+  }
+
+
+  function calculerTotal() {
+
+    return panier.reduce(
+      (total, article) =>
+        total + article.prix * article.quantite,
+      0
+    );
+  }
+
+
+  function afficherCommande() {
+
+    if (panier.length === 0) {
+
+      return "Votre panier est actuellement vide 🛒";
+    }
+
+    let texte = "🛒 Votre commande :\n\n";
+
+    panier.forEach((article, index) => {
+
+      texte +=
+        (index + 1) +
+        ". " +
+        article.quantite +
+        " × " +
+        article.nom +
+        " — " +
+        (article.prix * article.quantite) +
+        " DH\n";
+    });
+
+    texte +=
+      "\n💰 TOTAL : " +
+      calculerTotal() +
+      " DH";
+
+    return texte;
+  }
+
+
+  function ajouterAuPanier(produit, quantite, taille = "") {
+
+    let prix = produit.prix;
+
+    let nom = produit.nom;
+
+    if (
+      taille === "L" &&
+      produit.prixL
+    ) {
+
+      prix = produit.prixL;
+
+      nom += " L";
+    }
+
+    if (
+      taille === "M" &&
+      produit.prixL
+    ) {
+
+      nom += " M";
+    }
+
+
+    const existant = panier.find(
+      article =>
+        normaliser(article.nom) === normaliser(nom)
+    );
+
+
+    if (existant) {
+
+      existant.quantite += quantite;
+
+    } else {
+
+      panier.push({
+        nom: nom,
+        prix: prix,
         quantite: quantite
       });
 
+    }
+  }
+
+
+  /* =========================================================
+     MENU
+  ========================================================= */
+
+  function afficherMenu(categorie = null) {
+
+    let produits = menu;
+
+    if (categorie) {
+
+      produits = menu.filter(
+        produit =>
+          normaliser(produit.categorie)
+            .includes(normaliser(categorie))
+      );
+    }
+
+
+    if (produits.length === 0) {
+
       ajouterMessage(
-        "Ajouté 👍\n\n" +
-        afficherCommande() +
-        "\n\nSouhaitez-vous ajouter autre chose ?"
+        "Je n'ai pas trouvé cette catégorie 😕\n\n" +
+        "Essayez : Sushi, Poké, Wok, Plats du chef, " +
+        "Burgers & Bao, Boissons ou Desserts."
       );
 
       return;
     }
 
-    ajouterMessage(
-      "Je n'ai pas trouvé ce produit 😕\n" +
-      "Vous pouvez essayer avec le nom exact du plat ou de la boisson."
-    );
 
-    return;
+    let texte = "📋 MENU YONE\n\n";
+
+
+    let derniereCategorie = "";
+
+
+    produits.forEach(produit => {
+
+      if (
+        produit.categorie !== derniereCategorie
+      ) {
+
+        texte +=
+          "\n🍽️ " +
+          produit.categorie.toUpperCase() +
+          "\n";
+
+        derniereCategorie = produit.categorie;
+      }
+
+
+      let prix = produit.prix + " DH";
+
+      if (produit.prixL) {
+
+        prix =
+          "M " +
+          produit.prix +
+          " DH / L " +
+          produit.prixL +
+          " DH";
+      }
+
+
+      texte +=
+        "• " +
+        produit.nom +
+        " — " +
+        prix;
+
+      if (produit.pieces) {
+
+        texte +=
+          " (" +
+          produit.pieces +
+          ")";
+      }
+
+      texte += "\n";
+    });
+
+
+    ajouterMessage(texte);
   }
 
 
-  /* -------------------------
-     ÉTAPE NOM
-  ------------------------- */
-
-  if (etape === "nom") {
-
-    client.nom = texte;
+  function afficherCategories() {
 
     ajouterMessage(
-      "Merci " +
-      client.nom +
-      " 😊\n\n" +
-      "Quel est votre numéro de téléphone ?"
+      "📋 Voici les catégories du menu Yone :\n\n" +
+      "🍣 Sushi\n" +
+      "🥗 Poké Bowl\n" +
+      "🍜 Wok & Riz\n" +
+      "👨‍🍳 Plats du chef\n" +
+      "🍔 Burgers & Bao\n" +
+      "🥟 Sides & Extras\n" +
+      "🥤 Boissons\n" +
+      "🍰 Desserts\n\n" +
+      "Vous pouvez écrire par exemple :\n" +
+      "« Voir les sushi » ou « Montre-moi les boissons »."
     );
-
-    etape = "telephone";
-
-    return;
   }
 
 
-  /* -------------------------
-     ÉTAPE TELEPHONE
-  ------------------------- */
+  /* =========================================================
+     FIN PARTIE 2
+  ========================================================= */
+    /* =========================================================
+     PARTIE 3 — LOGIQUE DE YONE
+  ========================================================= */
 
-  if (etape === "telephone") {
+  let produitEnAttente = null;
+  let quantiteEnAttente = 1;
 
-    client.telephone = texte;
+  function estNouvelleCommande(texte) {
+    const t = normaliser(texte);
 
-    ajouterMessage(
-      "Parfait 📱\n\n" +
-      "Quelle est votre adresse de livraison ?"
+    return (
+      t.includes("nouvelle commande") ||
+      t.includes("recommencer") ||
+      t.includes("recommence") ||
+      t.includes("commencer une nouvelle") ||
+      t.includes("autre commande")
     );
-
-    etape = "adresse";
-
-    return;
   }
 
+  function estDemandeMenu(texte) {
+    const t = normaliser(texte);
 
-  /* -------------------------
-     ÉTAPE ADRESSE
-  ------------------------- */
-
-  if (etape === "adresse") {
-
-    client.adresse = texte;
-
-    ajouterMessage(
-      "Merci 📍\n\n" +
-      afficherCommande() +
-      "\n\n" +
-      "👤 Nom : " + client.nom +
-      "\n📱 Téléphone : " + client.telephone +
-      "\n📍 Adresse : " + client.adresse +
-      "\n\n" +
-      "Souhaitez-vous confirmer cette commande ?"
+    return (
+      t === "menu" ||
+      t.includes("voir le menu") ||
+      t.includes("montre moi le menu") ||
+      t.includes("montre le menu") ||
+      t.includes("affiche le menu") ||
+      t.includes("quel est le menu") ||
+      t.includes("qu est ce qu il y a")
     );
-
-    etape = "confirmation";
-
-    return;
   }
 
-
-  /* -------------------------
-     ÉTAPE CONFIRMATION
-  ------------------------- */
-
-  if (etape === "confirmation") {
-
+  function chercherCategorie(texte) {
     const t = normaliser(texte);
 
     if (
-      t === "oui" ||
-      t.includes("confirme") ||
-      t.includes("je confirme") ||
-      t.includes("c'est bon") ||
-      t.includes("c est bon")
+      t.includes("sushi") ||
+      t.includes("maki") ||
+      t.includes("california") ||
+      t.includes("nigiri") ||
+      t.includes("aromaki") ||
+      t.includes("onigiri") ||
+      t.includes("taco sushi") ||
+      t.includes("pizza sushi") ||
+      t.includes("fried sushi") ||
+      t.includes("fry")
     ) {
+      return "sushi";
+    }
 
-      ajouterMessage(
-        "🎉 Commande confirmée !\n\n" +
-        "Merci d'avoir choisi Yone Restaurant ❤️\n\n" +
-        "Notre équipe va traiter votre commande."
-      );
-
-      const messageWhatsApp =
-        encodeURIComponent(creerMessageWhatsApp());
-
-      const lienWhatsApp =
-        "https://wa.me/" +
-        whatsappRestaurant +
-        "?text=" +
-        messageWhatsApp;
-
-      /*
-        Redirection directe vers WhatsApp.
-        Cette méthode fonctionne mieux sur mobile
-        que window.open().
-      */
-
-      setTimeout(() => {
-
-        window.location.href = lienWhatsApp;
-
-      }, 500);
-
-      etape = "termine";
-
-      return;
+    if (t.includes("poke") || t.includes("poké")) {
+      return "poke";
     }
 
     if (
-      t === "non" ||
-      t.includes("annule") ||
-      t.includes("annuler")
+      t.includes("boisson") ||
+      t.includes("cocktail") ||
+      t.includes("cafe") ||
+      t.includes("café") ||
+      t.includes("soda") ||
+      t.includes("eau") ||
+      t.includes("detox")
     ) {
+      return "boissons";
+    }
+
+    if (
+      t.includes("dessert") ||
+      t.includes("glace") ||
+      t.includes("fondant") ||
+      t.includes("brownie")
+    ) {
+      return "desserts";
+    }
+
+    if (
+      t.includes("salade") ||
+      t.includes("salades")
+    ) {
+      return "salades";
+    }
+
+    if (
+      t.includes("soupe") ||
+      t.includes("yakitori")
+    ) {
+      return "soupes";
+    }
+
+    if (
+      t.includes("burger") ||
+      t.includes("bao") ||
+      t.includes("taco yone")
+    ) {
+      return "burgers";
+    }
+
+    if (
+      t.includes("wok") ||
+      t.includes("nouilles") ||
+      t.includes("riz cantonais")
+    ) {
+      return "wok";
+    }
+
+    if (
+      t.includes("chef") ||
+      t.includes("pad thai") ||
+      t.includes("tagliatelles") ||
+      t.includes("saumon curry") ||
+      t.includes("chimichurri")
+    ) {
+      return "chef";
+    }
+
+    if (
+      t.includes("bento") ||
+      t.includes("formule midi")
+    ) {
+      return "formules";
+    }
+
+    if (
+      t.includes("sashimi") ||
+      t.includes("tartare") ||
+      t.includes("chirashi") ||
+      t.includes("tataki") ||
+      t.includes("tiradito")
+    ) {
+      return "sashimi";
+    }
+
+    return null;
+  }
+
+  function afficherCategorie(categorie) {
+    const correspondances = {
+      sushi: [
+        "Signature",
+        "Aromaki",
+        "California",
+        "Fresh Roll",
+        "Maki",
+        "Nigiri",
+        "Fried Sushi",
+        "Maki Fry",
+        "Taco Sushi",
+        "Pizza Sushi",
+        "Onigiri",
+        "Assortiments"
+  /* =========================================================
+     PARTIE 3 — LOGIQUE DE YONE
+  ========================================================= */
+
+  let produitEnAttente = null;
+  let quantiteEnAttente = 1;
+
+  function estNouvelleCommande(texte) {
+    const t = normaliser(texte);
+
+    return (
+      t.includes("nouvelle commande") ||
+      t.includes("recommencer") ||
+      t.includes("recommence") ||
+      t.includes("commencer une nouvelle") ||
+      t.includes("autre commande")
+    );
+  }
+
+  function estDemandeMenu(texte) {
+    const t = normaliser(texte);
+
+    return (
+      t === "menu" ||
+      t.includes("voir le menu") ||
+      t.includes("montre moi le menu") ||
+      t.includes("montre le menu") ||
+      t.includes("affiche le menu") ||
+      t.includes("quel est le menu") ||
+      t.includes("qu est ce qu il y a")
+    );
+  }
+
+  function chercherCategorie(texte) {
+    const t = normaliser(texte);
+
+    if (
+      t.includes("sushi") ||
+      t.includes("maki") ||
+      t.includes("california") ||
+      t.includes("nigiri") ||
+      t.includes("aromaki") ||
+      t.includes("onigiri") ||
+      t.includes("taco sushi") ||
+      t.includes("pizza sushi") ||
+      t.includes("fried sushi") ||
+      t.includes("fry")
+    ) {
+      return "sushi";
+    }
+
+    if (t.includes("poke") || t.includes("poké")) {
+      return "poke";
+    }
+
+    if (
+      t.includes("boisson") ||
+      t.includes("cocktail") ||
+      t.includes("cafe") ||
+      t.includes("café") ||
+      t.includes("soda") ||
+      t.includes("eau") ||
+      t.includes("detox")
+    ) {
+      return "boissons";
+    }
+
+    if (
+      t.includes("dessert") ||
+      t.includes("glace") ||
+      t.includes("fondant") ||
+      t.includes("brownie")
+    ) {
+      return "desserts";
+    }
+
+    if (
+      t.includes("salade") ||
+      t.includes("salades")
+    ) {
+      return "salades";
+    }
+
+    if (
+      t.includes("soupe") ||
+      t.includes("yakitori")
+    ) {
+      return "soupes";
+    }
+
+    if (
+      t.includes("burger") ||
+      t.includes("bao") ||
+      t.includes("taco yone")
+    ) {
+      return "burgers";
+    }
+
+    if (
+      t.includes("wok") ||
+      t.includes("nouilles") ||
+      t.includes("riz cantonais")
+    ) {
+      return "wok";
+    }
+
+    if (
+      t.includes("chef") ||
+      t.includes("pad thai") ||
+      t.includes("tagliatelles") ||
+      t.includes("saumon curry") ||
+      t.includes("chimichurri")
+    ) {
+      return "chef";
+    }
+
+    if (
+      t.includes("bento") ||
+      t.includes("formule midi")
+    ) {
+      return "formules";
+    }
+
+    if (
+      t.includes("sashimi") ||
+      t.includes("tartare") ||
+      t.includes("chirashi") ||
+      t.includes("tataki") ||
+      t.includes("tiradito")
+    ) {
+      return "sashimi";
+    }
+
+    return null;
+  }
+
+  function afficherCategorie(categorie) {
+    const correspondances = {
+      sushi: [
+        "Signature",
+        "Aromaki",
+        "California",
+        "Fresh Roll",
+        "Maki",
+        "Nigiri",
+        "Fried Sushi",
+        "Maki Fry",
+        "Taco Sushi",
+        "Pizza Sushi",
+        "Onigiri",
+        "Assortiments"
+      ],
+      poke: ["Poké Bowl"],
+      boissons: ["Boissons"],
+      desserts: ["Desserts"],
+      salades: ["Salades"],
+      soupes: ["Soupes", "Yakitori"],
+      burgers: ["Burgers", "Bao bun", "Taco Yone"],
+      wok: ["Wok & Riz cantonais"],
+      chef: ["Plats du chef"],
+      formules: ["Bento", "Formules midi"],
+      sashimi: ["Sashimi & Co"]
+    };
+
+    const mots = correspondances[categorie];
+
+    if (!mots) {
+      ajouterMessage(
+        "Je n’ai pas trouvé cette catégorie 😅<br><br>" +
+        "Essayez <b>Menu</b> pour voir toutes les catégories."
+      );
+      return;
+    }
+
+    let produits = [];
+
+    menu.forEach(item => {
+      const cat = normaliser(item.categorie || "");
+
+      mots.forEach(mot => {
+        if (cat.includes(normaliser(mot))) {
+          produits.push(item);
+        }
+      });
+    });
+
+    // Supprimer les doublons
+    produits = produits.filter(
+      (item, index, self) =>
+        index === self.findIndex(
+          x => x.nom === item.nom && x.categorie === item.categorie
+        )
+    );
+
+    if (produits.length === 0) {
+      ajouterMessage(
+        "Cette catégorie est en cours de préparation 😊"
+      );
+      return;
+    }
+
+    let html = `<div class="menu-titre">🍣 ${categorie.toUpperCase()}</div>`;
+
+    produits.forEach(item => {
+      let prix = item.prix + " DH";
+
+      if (item.prixL) {
+        prix += ` / L ${item.prixL} DH`;
+      }
+
+      html += `
+        <div class="produit-menu">
+          <b>${item.nom}</b>
+          <span>${prix}</span>
+        </div>
+      `;
+    });
+
+    html += `
+      <br>
+      <button onclick="envoyerRapide('Ma commande')">
+        🛒 Voir ma commande
+      </button>
+    `;
+
+    ajouterMessage(html);
+  }
+
+  function trouverProduitIntelligent(texte) {
+    const t = normaliser(texte);
+
+    // Recherche exacte en priorité
+    let exact = menu.find(item => {
+      return normaliser(item.nom) === t;
+    });
+
+    if (exact) return exact;
+
+    // Recherche par nom contenu dans la phrase
+    let trouves = menu.filter(item => {
+      const nom = normaliser(item.nom);
+      return nom.length >= 3 && t.includes(nom);
+    });
+
+    if (trouves.length === 1) {
+      return trouves[0];
+    }
+
+    // Recherche inverse : le nom demandé peut contenir le texte
+    if (trouves.length === 0) {
+      trouves = menu.filter(item => {
+        const nom = normaliser(item.nom);
+        return nom.length >= 4 && nom.includes(t);
+      });
+    }
+
+    // Éviter une mauvaise sélection lorsque "Yone" est ambigu
+    if (trouves.length > 1) {
+      return null;
+    }
+
+    return trouves[0] || null;
+  }
+
+  function demanderTaille(produit, quantite) {
+    produitEnAttente = produit;
+    quantiteEnAttente = quantite;
+    etape = "taille";
+
+    ajouterMessage(
+      `Pour <b>${produit.nom}</b>, choisissez la taille :<br><br>` +
+      `👉 <b>M</b> : ${produit.prix} DH<br>` +
+      `👉 <b>L</b> : ${produit.prixL} DH`
+    );
+  }
+
+  function ajouterProduitAvecTaille(taille) {
+    if (!produitEnAttente) return;
+
+    const produit = {...produitEnAttente};
+
+    if (taille === "L") {
+      produit.prixChoisi = produit.prixL;
+      produit.taille = "L";
+    } else {
+      produit.prixChoisi = produit.prix;
+      produit.taille = "M";
+    }
+
+    for (let i = 0; i < quantiteEnAttente; i++) {
+      panier.push(produit);
+    }
+
+    ajouterMessage(
+      `✅ ${quantiteEnAttente} × <b>${produit.nom}</b> ` +
+      `(${produit.taille}) ajouté à votre commande.<br>` +
+      `Prix : <b>${produit.prixChoisi * quantiteEnAttente} DH</b>`
+    );
+
+    produitEnAttente = null;
+    quantiteEnAttente = 1;
+    etape = "commande";
+
+    ajouterMessage(
+      `Souhaitez-vous ajouter autre chose ? 😊<br><br>` +
+      `Vous pouvez dire <b>« ma commande »</b> pour voir le récapitulatif.`
+    );
+  }
+
+  function commencerNouvelleCommande() {
+    panier = [];
+    client = {
+      nom: "",
+      telephone: "",
+      adresse: ""
+    };
+
+    produitEnAttente = null;
+    quantiteEnAttente = 1;
+    etape = "commande";
+
+    ajouterMessage(
+      "🔄 Très bien ! On commence une nouvelle commande.<br><br>" +
+      "Que souhaitez-vous commander ? 😊"
+    );
+  }
+
+  function creerMessageWhatsApp() {
+    let message = "Bonjour YONE 👋%0A%0A";
+    message += "*Nouvelle commande* 🍣%0A%0A";
+
+    panier.forEach((item, index) => {
+      const prix = item.prixChoisi || item.prix;
+      const taille = item.taille ? ` (${item.taille})` : "";
+
+      message += `${index + 1}. ${item.nom}${taille} — ${prix} DH%0A`;
+    });
+
+    message += `%0A*Total : ${calculerTotal()} DH*%0A%0A`;
+
+    message += `*Client :* ${client.nom}%0A`;
+    message += `*Téléphone :* ${client.telephone}%0A`;
+    message += `*Adresse :* ${client.adresse}%0A`;
+
+    return message;
+  }
+
+  function terminerCommande() {
+    if (panier.length === 0) {
+      ajouterMessage(
+        "Votre panier est encore vide 😊<br>" +
+        "Dites-moi ce que vous souhaitez commander."
+      );
+      etape = "commande";
+      return;
+    }
+
+    etape = "nom";
+
+    ajouterMessage(
+      "Parfait 👍 Votre commande est prête.<br><br>" +
+      "Pour continuer, quel est votre <b>nom</b> ?"
+    );
+  }
+
+  function traiterMessage(texte) {
+    const t = normaliser(texte);
+    const original = texte.trim();
+
+    if (!original) return;
+
+    // Nouvelle commande à n'importe quel moment
+    if (estNouvelleCommande(original)) {
+      commencerNouvelleCommande();
+      return;
+    }
+
+    // Après une commande terminée, une nouvelle demande recommence automatiquement
+    if (etape === "termine") {
+      commencerNouvelleCommande();
+      traiterMessage(original);
+      return;
+    }
+
+    // Choix de taille
+    if (etape === "taille") {
+      if (
+        t === "m" ||
+        t.includes("taille m") ||
+        t.includes("moyenne")
+      ) {
+        ajouterProduitAvecTaille("M");
+        return;
+      }
+
+      if (
+        t === "l" ||
+        t.includes("taille l") ||
+        t.includes("grande")
+      ) {
+        ajouterProduitAvecTaille("L");
+        return;
+      }
 
       ajouterMessage(
-        "D'accord 👍 Votre commande n'a pas été envoyée."
+        "Veuillez choisir <b>M</b> ou <b>L</b> 😊"
       );
+      return;
+    }
 
-      etape = "termine";
+    // Étape nom
+    if (etape === "nom") {
+      if (t.length < 2) {
+        ajouterMessage("Pouvez-vous me donner votre nom ? 😊");
+        return;
+      }
+
+      client.nom = original;
+      etape = "telephone";
+
+      ajouterMessage(
+        `Merci <b>${client.nom}</b> 😊<br><br>` +
+        "Quel est votre <b>numéro de téléphone</b> ?"
+      );
+      return;
+    }
+
+    // Étape téléphone
+    if (etape === "telephone") {
+      const chiffres = original.replace(/[^\d+]/g, "");
+
+      if (chiffres.length < 8) {
+        ajouterMessage(
+          "Veuillez entrer un numéro de téléphone valide 📱"
+        );
+        return;
+      }
+
+      client.telephone = original;
+      etape = "adresse";
+
+      ajouterMessage(
+        "Merci 📱<br><br>" +
+        "Quelle est votre <b>adresse de livraison</b> ?"
+      );
+      return;
+    }
+
+    // Étape adresse
+    if (etape === "adresse") {
+      if (original.length < 5) {
+        ajouterMessage(
+          "Pouvez-vous préciser votre adresse de livraison ? 📍"
+        );
+        return;
+      }
+
+      client.adresse = original;
+      etape = "confirmation";
+
+      afficherCommande();
+
+      ajouterMessage(
+        "✅ Voici le récapitulatif de votre commande.<br><br>" +
+        `Nom : <b>${client.nom}</b><br>` +
+        `Téléphone : <b>${client.telephone}</b><br>` +
+        `Adresse : <b>${client.adresse}</b><br><br>` +
+        `<b>Confirmez-vous la commande ?</b><br><br>` +
+        `👉 Répondez <b>Oui</b> pour confirmer<br>` +
+        `👉 Répondez <b>Non</b> pour modifier`
+      );
 
       return;
     }
 
-    ajouterMessage(
-      "Souhaitez-vous confirmer la commande ? 😊\n\n" +
-      "Répondez simplement « Oui » ou « Non »."
-    );
+    // Confirmation
+    if (etape === "confirmation") {
+      if (
+        t === "oui" ||
+        t === "yes" ||
+        t === "confirme" ||
+        t === "confirmer" ||
+        t.includes("je confirme")
+      ) {
+        const message = creerMessageWhatsApp();
 
-    return;
-  }
+        ajouterMessage(
+          "🎉 Merci ! Votre commande est confirmée.<br><br>" +
+          "Je vais maintenant transmettre votre commande au restaurant. 🍣😊"
+        );
 
+        etape = "termine";
 
-  /* -------------------------
-     FIN
-  ------------------------- */
+        setTimeout(() => {
+          window.location.href =
+            `https://wa.me/${whatsappRestaurant}?text=${message}`;
+        }, 700);
 
-  if (etape === "termine") {
+        return;
+      }
 
-    ajouterMessage(
-      "Cette commande est terminée 😊"
-    );
+      if (
+        t === "non" ||
+        t.includes("modifier") ||
+        t.includes("changer")
+      ) {
+        etape = "commande";
 
-  }
+        ajouterMessage(
+          "Pas de problème 😊<br><br>" +
+          "Vous pouvez me dire ce que vous souhaitez modifier ou ajouter."
+        );
 
-}
+        return;
+      }
 
+      ajouterMessage(
+        "Souhaitez-vous confirmer la commande ? 😊<br><br>" +
+        "Répondez simplement <b>Oui</b> ou <b>Non</b>."
+      );
 
-/* =========================================================
-   MESSAGE D'ACCUEIL
-========================================================= */
-
-ajouterMessage(
-  "Bonjour 👋 Je suis Yone.\n\n" +
-  "Je peux vous aider à passer votre commande chez Yone Restaurant 🍣\n\n" +
-  "Que souhaitez-vous commander aujourd'hui ?"
-);
-
-
-/* =========================================================
-   TOUCHE ENTRÉE
-========================================================= */
-
-document
-  .getElementById("messageInput")
-  .addEventListener("keydown", function(event) {
-
-    if (event.key === "Enter") {
-      envoyer();
+      return;
     }
 
-  });
+    // Menu
+    if (estDemandeMenu(original)) {
+      afficherCategories();
+      return;
+    }
+
+    // Catégories
+    const categorie = chercherCategorie(original);
+
+    if (categorie) {
+      afficherCategorie(categorie);
+      return;
+    }
+
+    // Ma commande
+    if (
+      t.includes("ma commande") ||
+      t.includes("mon panier") ||
+      t.includes("voir panier") ||
+      t.includes("recapitulatif") ||
+      t.includes("récapitulatif")
+    ) {
+      afficherCommande();
+
+      if (panier.length > 0) {
+        ajouterMessage(
+          "Souhaitez-vous ajouter autre chose ou terminer la commande ? 😊"
+        );
+      }
+
+      return;
+    }
+
+    // Terminer
+    if (
+      t === "c est tout" ||
+      t === "c'est tout" ||
+      t.includes("terminer") ||
+      t.includes("finaliser") ||
+      t.includes("je termine") ||
+      t.includes("commander")
+    ) {
+      terminerCommande();
+      return;
+    }
+
+    // Produit
+    const produit = trouverProduitIntelligent(original);
+
+    if (produit) {
+      const quantite = trouverQuantite(original);
+
+      if (produit.prixL) {
+        demanderTaille(produit, quantite);
+      } else {
+        ajouterAuPanier(produit, quantite);
+      }
+
+      return;
+    }
+
+    // Cas où l'utilisateur répond "oui" dans une commande normale
+    if (
+      t === "oui" ||
+      t === "ok" ||
+      t === "daccord" ||
+      t === "d'accord"
+    ) {
+      ajouterMessage(
+        "Parfait 😊 Que souhaitez-vous ajouter à votre commande ?"
+      );
+      return;
+    }
+
+    // Fallback
+    ajouterMessage(
+      "Je n’ai pas bien compris 😅<br><br>" +
+      "Vous pouvez par exemple écrire :<br>" +
+      "🍣 <b>2 Maki Saumon</b><br>" +
+      "🍜 <b>1 Pad thai</b><br>" +
+      "🥤 <b>2 Soda</b><br>" +
+      "📋 <b>Menu</b><br>" +
+      "🛒 <b>Ma commande</b>"
+    );
+  }
+
+  /* =========================================================
+     INITIALISATION
+  ========================================================= */
+
+  ajouterMessage(
+    "Bonjour et bienvenue chez <b>YONE</b> 🍣😊<br><br>" +
+    "Je suis votre assistant de commande.<br>" +
+    "Vous pouvez demander le <b>menu</b> ou commander directement.<br><br>" +
+    "Que souhaitez-vous ?"
+  );
+
+  const champ = document.getElementById("message");
+
+  if (champ) {
+    champ.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        envoyer();
+      }
+    });
+  }
 
 </script>
-
 </body>
 </html>
