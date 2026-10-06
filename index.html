@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Yone Restaurant</title>
 
   <style>
@@ -51,11 +50,12 @@
     }
 
     .message {
-      max-width: 80%;
+      max-width: 85%;
       padding: 12px 15px;
       margin-bottom: 12px;
       border-radius: 16px;
-      line-height: 1.4;
+      line-height: 1.5;
+      white-space: pre-line;
     }
 
     .yone {
@@ -126,21 +126,118 @@
 
 <script>
 
-let etape = 0;
+const menu = [
+  { nom: "maki ebi", prix: 35 },
+  { nom: "maki saumon", prix: 40 },
+  { nom: "california sesame", prix: 35 },
+  { nom: "fresh saumon", prix: 55 },
+  { nom: "chicken yasashii", prix: 65 },
+  { nom: "tacos crunchy", prix: 60 },
+  { nom: "tacos mechoui", prix: 65 },
+  { nom: "wok poulet", prix: 65 },
+  { nom: "poulet grille", prix: 40 },
+  { nom: "quinoa happy", prix: 60 },
+  { nom: "riz blanc", prix: 10 },
+  { nom: "brownie chocolat", prix: 40 },
+  { nom: "soda", prix: 15 },
+  { nom: "jus detox", prix: 35 },
+  { nom: "citron gingembre", prix: 40 }
+];
+
+let commande = [];
+let etape = "commande";
 
 const chat = document.getElementById("chat");
 
 function ajouterMessage(texte, type) {
-
   const message = document.createElement("div");
 
   message.className = "message " + type;
-
   message.textContent = texte;
 
   chat.appendChild(message);
-
   chat.scrollTop = chat.scrollHeight;
+}
+
+function normaliser(texte) {
+  return texte
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function trouverProduit(texte) {
+
+  const texteNormalise = normaliser(texte);
+
+  for (const produit of menu) {
+
+    if (texteNormalise.includes(produit.nom)) {
+      return produit;
+    }
+  }
+
+  return null;
+}
+
+function trouverQuantite(texte) {
+
+  const nombres = texte.match(/\d+/);
+
+  if (nombres) {
+    return parseInt(nombres[0]);
+  }
+
+  const mots = {
+    "un": 1,
+    "une": 1,
+    "deux": 2,
+    "trois": 3,
+    "quatre": 4,
+    "cinq": 5,
+    "six": 6,
+    "sept": 7,
+    "huit": 8,
+    "neuf": 9,
+    "dix": 10
+  };
+
+  const texteNormalise = normaliser(texte);
+
+  for (const mot in mots) {
+
+    if (texteNormalise.includes(mot)) {
+      return mots[mot];
+    }
+  }
+
+  return 1;
+}
+
+function afficherCommande() {
+
+  let total = 0;
+  let texte = "🧾 Votre commande :\n\n";
+
+  commande.forEach(article => {
+
+    const sousTotal = article.prix * article.quantite;
+
+    total += sousTotal;
+
+    texte +=
+      "🍽️ " +
+      article.quantite +
+      " × " +
+      article.nom +
+      " — " +
+      sousTotal +
+      " DH\n";
+  });
+
+  texte += "\n💰 Total : " + total + " DH";
+
+  return texte;
 }
 
 function envoyer() {
@@ -159,52 +256,146 @@ function envoyer() {
 
     let reponse = "";
 
-    if (etape === 0) {
+    if (etape === "commande") {
+
+      const produit = trouverProduit(texte);
+
+      if (produit) {
+
+        const quantite = trouverQuantite(texte);
+
+        commande.push({
+          nom: produit.nom,
+          prix: produit.prix,
+          quantite: quantite
+        });
+
+        reponse =
+          "Excellent choix 😋\n\n" +
+          "🍽️ " +
+          quantite +
+          " × " +
+          produit.nom +
+          " — " +
+          (produit.prix * quantite) +
+          " DH\n\n" +
+          "Souhaitez-vous ajouter autre chose ?";
+
+        etape = "ajouter";
+
+      } else {
+
+        reponse =
+          "Je peux vous aider à choisir 😊\n\n" +
+          "Essayez par exemple :\n" +
+          "🍣 Maki Saumon\n" +
+          "🍔 Chicken Yasashii\n" +
+          "🌮 Tacos Crunchy\n" +
+          "🍜 Wok Poulet\n" +
+          "🥤 Soda";
+      }
+
+    } else if (etape === "ajouter") {
+
+      const produit = trouverProduit(texte);
+
+      const texteNormalise = normaliser(texte);
+
+      if (
+        texteNormalise.includes("non") ||
+        texteNormalise.includes("c'est tout") ||
+        texteNormalise.includes("ca sera tout") ||
+        texteNormalise.includes("terminer")
+      ) {
+
+        reponse =
+          afficherCommande() +
+          "\n\n📱 Pour continuer, donnez-moi votre nom.";
+
+        etape = "nom";
+
+      } else if (produit) {
+
+        const quantite = trouverQuantite(texte);
+
+        commande.push({
+          nom: produit.nom,
+          prix: produit.prix,
+          quantite: quantite
+        });
+
+        reponse =
+          "Ajouté 👍\n\n" +
+          afficherCommande() +
+          "\n\nSouhaitez-vous ajouter autre chose ?";
+
+      } else {
+
+        reponse =
+          "Je n'ai pas reconnu ce produit 😅\n" +
+          "Vous pouvez me donner le nom d'un produit du menu.";
+      }
+
+    } else if (etape === "nom") {
 
       reponse =
-        "Avec plaisir 😊 Que souhaitez-vous commander ? 🍔🍕🥤";
+        "Merci, " +
+        texte +
+        " 😊\n\n" +
+        "📞 Quel est votre numéro de téléphone ?";
 
-      etape = 1;
+      etape = "telephone";
 
-    } else if (etape === 1) {
-
-      reponse =
-        "Excellent choix 😋 Combien souhaitez-vous en commander ?";
-
-      etape = 2;
-
-    } else if (etape === 2) {
+    } else if (etape === "telephone") {
 
       reponse =
-        "Parfait 👍 Quelle boisson souhaitez-vous avec votre commande ?";
+        "Parfait 👍\n\n" +
+        "📍 Quelle est votre adresse de livraison ?";
 
-      etape = 3;
+      etape = "adresse";
 
-    } else if (etape === 3) {
-
-      reponse =
-        "Très bien 🥤 Pour la livraison, pouvez-vous me donner votre nom ?";
-
-      etape = 4;
-
-    } else if (etape === 4) {
+    } else if (etape === "adresse") {
 
       reponse =
-        "Merci ! 📍 Quelle est votre adresse de livraison ?";
+        "Merci 📍\n\n" +
+        afficherCommande() +
+        "\n\n" +
+        "📍 Adresse : " +
+        texte +
+        "\n\n" +
+        "Souhaitez-vous confirmer cette commande ? (Oui / Non)";
 
-      etape = 5;
+      etape = "confirmation";
 
-    } else if (etape === 5) {
+    } else if (etape === "confirmation") {
 
-      reponse =
-        "Parfait ✅ Votre commande est presque terminée. Merci pour votre confiance !";
+      const texteNormalise = normaliser(texte);
 
-      etape = 6;
+      if (
+        texteNormalise.includes("oui") ||
+        texteNormalise.includes("confirme")
+      ) {
+
+        reponse =
+          "🎉 Commande confirmée !\n\n" +
+          "Merci d'avoir choisi Yone Restaurant ❤️\n\n" +
+          "Notre équipe va traiter votre commande.";
+
+        etape = "termine";
+
+      } else {
+
+        reponse =
+          "Pas de problème 😊\n" +
+          "Votre commande n'a pas été confirmée.";
+
+        etape = "termine";
+      }
 
     } else {
 
       reponse =
-        "Merci 😊 Si vous souhaitez passer une nouvelle commande, dites-moi simplement ce que vous voulez.";
+        "Merci 😊 Pour passer une nouvelle commande, rechargez la page.";
 
     }
 
@@ -214,7 +405,9 @@ function envoyer() {
 }
 
 ajouterMessage(
-  "Bonjour 👋 Je suis Yone. Que souhaitez-vous commander aujourd'hui ?",
+  "Bonjour 👋 Je suis Yone.\n\n" +
+  "Je peux vous aider à passer votre commande chez Yone Restaurant 🍣\n\n" +
+  "Que souhaitez-vous commander aujourd'hui ?",
   "yone"
 );
 
