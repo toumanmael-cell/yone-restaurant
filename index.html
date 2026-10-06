@@ -1501,72 +1501,7 @@
       t === "c est tout" ||
       t === "c'est tout" ||
       t.includes("terminer") ||
-      t.includes("finaliser") ||
-      t.includes("je termine") ||
-      t.includes("commander")
-    ) {
-      terminerCommande();
-      return;
-    }
 
-    // Produit
-    const produit = trouverProduitIntelligent(original);
-
-    if (produit) {
-      const quantite = trouverQuantite(original);
-
-      if (produit.prixL) {
-        demanderTaille(produit, quantite);
-      } else {
-        ajouterAuPanier(produit, quantite);
-      }
-
-      return;
-    }
-
-    // Cas où l'utilisateur répond "oui" dans une commande normale
-    if (
-      t === "oui" ||
-      t === "ok" ||
-      t === "daccord" ||
-      t === "d'accord"
-    ) {
-      ajouterMessage(
-        "Parfait 😊 Que souhaitez-vous ajouter à votre commande ?"
-      );
-      return;
-    }
-
-    // Fallback
-    ajouterMessage(
-      "Je n’ai pas bien compris 😅<br><br>" +
-      "Vous pouvez par exemple écrire :<br>" +
-      "🍣 <b>2 Maki Saumon</b><br>" +
-      "🍜 <b>1 Pad thai</b><br>" +
-      "🥤 <b>2 Soda</b><br>" +
-      "📋 <b>Menu</b><br>" +
-      "🛒 <b>Ma commande</b>"
-    );
-  }
-function envoyer() {
-  const input = document.getElementById("messageInput");
-
-  if (!input) {
-    alert("Erreur : champ de message introuvable.");
-    return;
-  }
-
-  const texte = input.value.trim();
-
-  if (!texte) {
-    return;
-  }
-
-  ajouterMessage(texte, "user");
-  input.value = "";
-
-  traiterMessage(texte);
-  }
   /* =========================================================
      INITIALISATION
   ========================================================= */
