@@ -1,1 +1,40 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yone Restaurant</title>
+</head>
+
+<body>
+  <h1>🍽️ Yone Restaurant</h1>
+
+  <p>Bonjour 👋 Je suis Yone, votre assistant de commande.</p>
+
+  <input
+    type="text"
+    id="message"
+    placeholder="Écrivez votre commande..."
+  >
+
+  <button onclick="envoyer()">Envoyer</button>
+
+  <p id="reponse"></p>
+
+  <script>
+    function envoyer() {
+      const message = document.getElementById("message").value;
+      const reponse = document.getElementById("reponse");
+
+      if (message.trim() === "") {
+        reponse.textContent = "Écrivez votre commande 😊";
+        return;
+      }
+
+      reponse.textContent =
+        "Merci ! J'ai reçu votre demande : " + message;
+    }
+  </script>
+</body>
+</html>
