@@ -1,40 +1,224 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Yone Restaurant</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    .app {
+      max-width: 500px;
+      height: 100vh;
+      margin: auto;
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #111;
+      color: white;
+      padding: 18px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 12px 15px;
+      margin-bottom: 12px;
+      border-radius: 16px;
+      line-height: 1.4;
+    }
+
+    .yone {
+      background: #eeeeee;
+      color: #111;
+      margin-right: auto;
+    }
+
+    .client {
+      background: #111;
+      color: white;
+      margin-left: auto;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+
+    button {
+      border: none;
+      background: #111;
+      color: white;
+      padding: 0 18px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>🍽️ Yone Restaurant</h1>
 
-  <p>Bonjour 👋 Je suis Yone, votre assistant de commande.</p>
+<div class="app">
 
-  <input
-    type="text"
-    id="message"
-    placeholder="Écrivez votre commande..."
-  >
+  <header>
+    <h1>🍽️ Yone Restaurant</h1>
+    <p>Votre assistant de commande</p>
+  </header>
 
-  <button onclick="envoyer()">Envoyer</button>
+  <div id="chat"></div>
 
-  <p id="reponse"></p>
+  <div class="input-area">
+    <input
+      id="message"
+      type="text"
+      placeholder="Écrivez votre commande..."
+      onkeydown="if(event.key === 'Enter') envoyer()"
+    >
 
-  <script>
-    function envoyer() {
-      const message = document.getElementById("message").value;
-      const reponse = document.getElementById("reponse");
+    <button onclick="envoyer()">Envoyer</button>
+  </div>
 
-      if (message.trim() === "") {
-        reponse.textContent = "Écrivez votre commande 😊";
-        return;
-      }
+</div>
 
-      reponse.textContent =
-        "Merci ! J'ai reçu votre demande : " + message;
+<script>
+
+let etape = 0;
+
+const chat = document.getElementById("chat");
+
+function ajouterMessage(texte, type) {
+
+  const message = document.createElement("div");
+
+  message.className = "message " + type;
+
+  message.textContent = texte;
+
+  chat.appendChild(message);
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function envoyer() {
+
+  const input = document.getElementById("message");
+
+  const texte = input.value.trim();
+
+  if (texte === "") return;
+
+  ajouterMessage(texte, "client");
+
+  input.value = "";
+
+  setTimeout(() => {
+
+    let reponse = "";
+
+    if (etape === 0) {
+
+      reponse =
+        "Avec plaisir 😊 Que souhaitez-vous commander ? 🍔🍕🥤";
+
+      etape = 1;
+
+    } else if (etape === 1) {
+
+      reponse =
+        "Excellent choix 😋 Combien souhaitez-vous en commander ?";
+
+      etape = 2;
+
+    } else if (etape === 2) {
+
+      reponse =
+        "Parfait 👍 Quelle boisson souhaitez-vous avec votre commande ?";
+
+      etape = 3;
+
+    } else if (etape === 3) {
+
+      reponse =
+        "Très bien 🥤 Pour la livraison, pouvez-vous me donner votre nom ?";
+
+      etape = 4;
+
+    } else if (etape === 4) {
+
+      reponse =
+        "Merci ! 📍 Quelle est votre adresse de livraison ?";
+
+      etape = 5;
+
+    } else if (etape === 5) {
+
+      reponse =
+        "Parfait ✅ Votre commande est presque terminée. Merci pour votre confiance !";
+
+      etape = 6;
+
+    } else {
+
+      reponse =
+        "Merci 😊 Si vous souhaitez passer une nouvelle commande, dites-moi simplement ce que vous voulez.";
+
     }
-  </script>
+
+    ajouterMessage(reponse, "yone");
+
+  }, 500);
+}
+
+ajouterMessage(
+  "Bonjour 👋 Je suis Yone. Que souhaitez-vous commander aujourd'hui ?",
+  "yone"
+);
+
+</script>
+
 </body>
 </html>
