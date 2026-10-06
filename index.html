@@ -1548,7 +1548,25 @@
       "🛒 <b>Ma commande</b>"
     );
   }
+function envoyer() {
+  const input = document.getElementById("messageInput");
 
+  if (!input) {
+    alert("Erreur : champ de message introuvable.");
+    return;
+  }
+
+  const texte = input.value.trim();
+
+  if (!texte) {
+    return;
+  }
+
+  ajouterMessage(texte, "user");
+  input.value = "";
+
+  traiterMessage(texte);
+  }
   /* =========================================================
      INITIALISATION
   ========================================================= */
