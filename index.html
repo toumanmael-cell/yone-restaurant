@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yone Restaurant</title>
+  <title>Yone Restaurant - Assistant</title>
 
   <style>
     * {
@@ -14,12 +14,13 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f5f5f5;
+      color: #222;
     }
 
     .app {
-      max-width: 500px;
-      height: 100vh;
+      max-width: 700px;
       margin: auto;
+      min-height: 100vh;
       background: white;
       display: flex;
       flex-direction: column;
@@ -28,43 +29,41 @@
     header {
       background: #111;
       color: white;
-      padding: 18px;
+      padding: 22px;
       text-align: center;
     }
 
     header h1 {
-      margin: 0;
-      font-size: 22px;
+      margin: 0 0 6px;
+      font-size: 28px;
     }
 
     header p {
-      margin: 6px 0 0;
-      font-size: 13px;
-      opacity: 0.8;
+      margin: 0;
+      opacity: .8;
     }
 
     #chat {
       flex: 1;
+      padding: 18px;
       overflow-y: auto;
-      padding: 15px;
     }
 
     .message {
-      max-width: 85%;
-      padding: 12px 15px;
-      margin-bottom: 12px;
+      padding: 13px 15px;
       border-radius: 16px;
+      margin-bottom: 12px;
+      max-width: 90%;
       line-height: 1.5;
       white-space: pre-line;
     }
 
     .yone {
-      background: #eeeeee;
-      color: #111;
+      background: #f0f0f0;
       margin-right: auto;
     }
 
-    .client {
+    .user {
       background: #111;
       color: white;
       margin-left: auto;
@@ -72,16 +71,20 @@
 
     .input-area {
       display: flex;
-      padding: 10px;
-      border-top: 1px solid #ddd;
       gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #ddd;
+      background: white;
+      position: sticky;
+      bottom: 0;
     }
 
     input {
       flex: 1;
-      padding: 13px;
+      padding: 14px;
       border: 1px solid #ccc;
-      border-radius: 20px;
+      border-radius: 12px;
+      font-size: 16px;
       outline: none;
     }
 
@@ -90,12 +93,18 @@
       background: #111;
       color: white;
       padding: 0 18px;
-      border-radius: 20px;
+      border-radius: 12px;
+      font-size: 16px;
       cursor: pointer;
     }
 
     button:hover {
-      opacity: 0.85;
+      opacity: .85;
+    }
+
+    .total {
+      font-weight: bold;
+      font-size: 18px;
     }
   </style>
 </head>
@@ -105,20 +114,19 @@
 <div class="app">
 
   <header>
-    <h1>🍽️ Yone Restaurant</h1>
-    <p>Votre assistant de commande</p>
+    <h1>YONE 🍣</h1>
+    <p>Assistant de commande</p>
   </header>
 
   <div id="chat"></div>
 
   <div class="input-area">
     <input
-      id="message"
+      id="messageInput"
       type="text"
       placeholder="Écrivez votre commande..."
-      onkeydown="if(event.key === 'Enter') envoyer()"
+      autocomplete="off"
     >
-
     <button onclick="envoyer()">Envoyer</button>
   </div>
 
@@ -126,597 +134,65 @@
 
 <script>
 
-/* =========================
+/* =========================================================
    CONFIGURATION
-========================= */
+========================================================= */
 
 const whatsappRestaurant = "212712633358";
 
 
-/* =========================
-   MENU YONE
-========================= */
+/* =========================================================
+   MENU COMPLET YONE
+========================================================= */
 
 const menu = [
 
-  { nom: "maki ebi", prix: 35 },
-  { nom: "maki saumon", prix: 40 },
-
-  { nom: "california sesame", prix: 35 },
-  { nom: "fresh saumon", prix: 55 },
-
-  { nom: "chicken yasashii", prix: 65 },
-
-  { nom: "tacos crunchy", prix: 60 },
-  { nom: "tacos mechoui", prix: 65 },
-
-  { nom: "wok poulet", prix: 65 },
-
-  { nom: "poulet grille", prix: 40 },
-
-  { nom: "quinoa happy", prix: 60 },
-
-  { nom: "riz blanc", prix: 10 },
-
-  { nom: "brownie chocolat", prix: 40 },
-
-  { nom: "soda", prix: 15 },
-
-  { nom: "jus detox", prix: 35 },
-
-  { nom: "citron gingembre", prix: 40 }
-
-];
-
-
-/* =========================
-   VARIABLES
-========================= */
-
-let commande = [];
-
-let etape = "commande";
-
-let client = {
-  nom: "",
-  telephone: "",
-  adresse: ""
-};
-
-const chat = document.getElementById("chat");
-
-
-/* =========================
-   AFFICHER MESSAGE
-========================= */
-
-function ajouterMessage(texte, type) {
-
-  const message = document.createElement("div");
-
-  message.className = "message " + type;
-
-  message.textContent = texte;
-
-  chat.appendChild(message);
-
-  chat.scrollTop = chat.scrollHeight;
-}
-
-
-/* =========================
-   NORMALISER TEXTE
-========================= */
-
-function normaliser(texte) {
-
-  return texte
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-}
-
-
-/* =========================
-   TROUVER PRODUIT
-========================= */
-
-function trouverProduit(texte) {
-
-  const texteNormalise = normaliser(texte);
-
-  for (const produit of menu) {
-
-    if (texteNormalise.includes(produit.nom)) {
-
-      return produit;
-
-    }
-
-  }
-
-  return null;
-
-}
-
-
-/* =========================
-   TROUVER QUANTITE
-========================= */
-
-function trouverQuantite(texte) {
-
-  const nombres = texte.match(/\d+/);
-
-  if (nombres) {
-
-    return parseInt(nombres[0]);
-
-  }
-
-  const mots = {
-
-    "un": 1,
-    "une": 1,
-    "deux": 2,
-    "trois": 3,
-    "quatre": 4,
-    "cinq": 5,
-    "six": 6,
-    "sept": 7,
-    "huit": 8,
-    "neuf": 9,
-    "dix": 10
-
-  };
-
-  const texteNormalise = normaliser(texte);
-
-  for (const mot in mots) {
-
-    if (texteNormalise.includes(mot)) {
-
-      return mots[mot];
-
-    }
-
-  }
-
-  return 1;
-
-}
-
-
-/* =========================
-   CALCUL TOTAL
-========================= */
-
-function calculerTotal() {
-
-  let total = 0;
-
-  commande.forEach(article => {
-
-    total += article.prix * article.quantite;
-
-  });
-
-  return total;
-
-}
-
-
-/* =========================
-   AFFICHER COMMANDE
-========================= */
-
-function afficherCommande() {
-
-  let texte = "🧾 Votre commande :\n\n";
-
-  commande.forEach(article => {
-
-    const sousTotal =
-      article.prix * article.quantite;
-
-    texte +=
-      "🍽️ " +
-      article.quantite +
-      " × " +
-      article.nom +
-      " — " +
-      sousTotal +
-      " DH\n";
-
-  });
-
-  texte +=
-    "\n💰 Total : " +
-    calculerTotal() +
-    " DH";
-
-  return texte;
-
-}
-
-
-/* =========================
-   CREER MESSAGE WHATSAPP
-========================= */
-
-function creerMessageWhatsApp() {
-
-  let message =
-    "🍽️ NOUVELLE COMMANDE YONE\n\n";
-
-  message += "🧾 COMMANDE\n";
-
-  commande.forEach(article => {
-
-    const sousTotal =
-      article.prix * article.quantite;
-
-    message +=
-      "• " +
-      article.quantite +
-      " × " +
-      article.nom +
-      " — " +
-      sousTotal +
-      " DH\n";
-
-  });
-
-  message +=
-    "\n💰 TOTAL : " +
-    calculerTotal() +
-    " DH\n";
-
-  message +=
-    "\n👤 CLIENT : " +
-    client.nom;
-
-  message +=
-    "\n📞 TÉLÉPHONE : " +
-    client.telephone;
-
-  message +=
-    "\n📍 ADRESSE : " +
-    client.adresse;
-
-  message +=
-    "\n\n✅ Commande confirmée via Yone.";
-
-  return message;
-
-}
-
-
-/* =========================
-   ENVOYER
-========================= */
-
-function envoyer() {
-
-  const input =
-    document.getElementById("message");
-
-  const texte =
-    input.value.trim();
-
-  if (texte === "") return;
-
-  ajouterMessage(
-    texte,
-    "client"
-  );
-
-  input.value = "";
-
-
-  setTimeout(() => {
-
-    let reponse = "";
-
-    /* =====================
-       COMMANDE
-    ===================== */
-
-    if (etape === "commande") {
-
-      const produit =
-        trouverProduit(texte);
-
-      if (produit) {
-
-        const quantite =
-          trouverQuantite(texte);
-
-        commande.push({
-
-          nom: produit.nom,
-
-          prix: produit.prix,
-
-          quantite: quantite
-
-        });
-
-        reponse =
-          "Excellent choix 😋\n\n" +
-
-          "🍽️ " +
-          quantite +
-          " × " +
-          produit.nom +
-          " — " +
-          (produit.prix * quantite) +
-          " DH\n\n" +
-
-          "Souhaitez-vous ajouter autre chose ?";
-
-        etape = "ajouter";
-
-      } else {
-
-        reponse =
-          "Je peux vous aider à choisir 😊\n\n" +
-
-          "Essayez par exemple :\n" +
-
-          "🍣 Maki Saumon\n" +
-          "🍣 Maki Ebi\n" +
-          "🍔 Chicken Yasashii\n" +
-          "🌮 Tacos Crunchy\n" +
-          "🍜 Wok Poulet\n" +
-          "🥤 Soda";
-
-      }
-
-
-    /* =====================
-       AJOUTER PRODUIT
-    ===================== */
-
-    } else if (etape === "ajouter") {
-
-      const produit =
-        trouverProduit(texte);
-
-      const texteNormalise =
-        normaliser(texte);
-
-
-      if (
-
-        texteNormalise.includes("non") ||
-
-        texteNormalise.includes("c'est tout") ||
-
-        texteNormalise.includes("ca sera tout") ||
-
-        texteNormalise.includes("terminer")
-
-      ) {
-
-        reponse =
-          afficherCommande() +
-
-          "\n\n📱 Pour continuer, donnez-moi votre nom.";
-
-        etape = "nom";
-
-
-      } else if (produit) {
-
-        const quantite =
-          trouverQuantite(texte);
-
-        commande.push({
-
-          nom: produit.nom,
-
-          prix: produit.prix,
-
-          quantite: quantite
-
-        });
-
-        reponse =
-          "Ajouté 👍\n\n" +
-
-          afficherCommande() +
-
-          "\n\nSouhaitez-vous ajouter autre chose ?";
-
-
-      } else {
-
-        reponse =
-          "Je n'ai pas reconnu ce produit 😅\n\n" +
-
-          "Donnez-moi le nom d'un produit du menu.";
-
-      }
-
-
-    /* =====================
-       NOM
-    ===================== */
-
-    } else if (etape === "nom") {
-
-      client.nom = texte;
-
-      reponse =
-        "Merci, " +
-        client.nom +
-        " 😊\n\n" +
-
-        "📞 Quel est votre numéro de téléphone ?";
-
-      etape = "telephone";
-
-
-    /* =====================
-       TELEPHONE
-    ===================== */
-
-    } else if (etape === "telephone") {
-
-      client.telephone = texte;
-
-      reponse =
-        "Parfait 👍\n\n" +
-
-        "📍 Quelle est votre adresse de livraison ?";
-
-      etape = "adresse";
-
-
-    /* =====================
-       ADRESSE
-    ===================== */
-
-    } else if (etape === "adresse") {
-
-      client.adresse = texte;
-
-      reponse =
-        afficherCommande() +
-
-        "\n\n👤 Nom : " +
-        client.nom +
-
-        "\n📞 Téléphone : " +
-        client.telephone +
-
-        "\n📍 Adresse : " +
-        client.adresse +
-
-        "\n\nSouhaitez-vous confirmer cette commande ? (Oui / Non)";
-
-      etape = "confirmation";
-
-
-    /* =====================
-       CONFIRMATION
-    ===================== */
-
-    } else if (etape === "confirmation") {
-
-      const texteNormalise =
-        normaliser(texte);
-
-
-      if (
-
-        texteNormalise.includes("oui") ||
-
-        texteNormalise.includes("confirme")
-
-      ) {
-
-        const messageWhatsApp =
-          encodeURIComponent(
-            creerMessageWhatsApp()
-          );
-
-        const lienWhatsApp =
-          "https://wa.me/" +
-          whatsappRestaurant +
-          "?text=" +
-          messageWhatsApp;
-
-
-        reponse =
-          "🎉 Commande confirmée !\n\n" +
-
-          "Merci d'avoir choisi " +
-          "Yone Restaurant ❤️\n\n" +
-
-          "📲 Préparation de l'envoi vers WhatsApp...";
-
-
-        ajouterMessage(
-          reponse,
-          "yone"
-        );
-
-
-        window.location.href = lienWhatsApp;(() => {
-
-          window.open(
-            lienWhatsApp,
-            "_blank"
-          );
-
-        }, 800);
-
-
-        etape = "termine";
-
-        return;
-
-
-      } else {
-
-        reponse =
-          "Pas de problème 😊\n\n" +
-
-          "Votre commande n'a pas été confirmée.";
-
-        etape = "termine";
-
-      }
-
-
-    /* =====================
-       FIN
-    ===================== */
-
-    } else {
-
-      reponse =
-        "Merci 😊\n\n" +
-
-        "Pour passer une nouvelle commande, " +
-
-        "rafraîchissez la page.";
-
-    }
-
-
-    ajouterMessage(
-      reponse,
-      "yone"
-    );
-
-  }, 500);
-
-}
-
-
-/* =========================
-   MESSAGE DE BIENVENUE
-========================= */
-
-ajouterMessage(
-
-  "Bonjour 👋 Je suis Yone.\n\n" +
-
-  "Je peux vous aider à passer " +
-  "votre commande chez Yone Restaurant 🍣\n\n" +
-
-  "Que souhaitez-vous commander " +
-  "aujourd'hui ?",
-
-  "yone"
-
-);
-
-</script>
-
-</body>
-</html>
+  /* SIGNATURE */
+  {nom:"amai", prix:70, categorie:"Signature"},
+  {nom:"pinchu", prix:55, categorie:"Signature"},
+  {nom:"truffalo", prix:75, categorie:"Signature"},
+  {nom:"okinawa", prix:60, categorie:"Signature"},
+  {nom:"bouddaha", prix:60, categorie:"Signature"},
+  {nom:"vitello", prix:65, categorie:"Signature"},
+  {nom:"umicrisp", prix:65, categorie:"Signature"},
+  {nom:"gyu", prix:85, categorie:"Signature"},
+  {nom:"cheese", prix:60, categorie:"Signature"},
+  {nom:"oyshi", prix:70, categorie:"Signature"},
+  {nom:"kana", prix:55, categorie:"Signature"},
+  {nom:"roll mystère 4p", prix:50, categorie:"Signature"},
+  {nom:"roll mystère 6p", prix:65, categorie:"Signature"},
+
+  /* AROMAKI */
+  {nom:"aromaki saumon", prix:65, categorie:"Aromaki"},
+  {nom:"aromaki crabe", prix:65, categorie:"Aromaki"},
+  {nom:"aromaki mango", prix:65, categorie:"Aromaki"},
+  {nom:"aromaki mosaïque", prix:65, categorie:"Aromaki"},
+  {nom:"aromaki shake yaki", prix:65, categorie:"Aromaki"},
+
+  /* CALIFORNIA / FRESH */
+  {nom:"philly", prix:40, categorie:"California"},
+  {nom:"tiger", prix:35, categorie:"California"},
+  {nom:"tanuki", prix:55, categorie:"California"},
+  {nom:"yasuo", prix:60, categorie:"California"},
+  {nom:"fresh saumon", prix:55, categorie:"Fresh Roll"},
+  {nom:"sésame", prix:40, categorie:"California"},
+  {nom:"shake yaki", prix:40, categorie:"California"},
+  {nom:"king crabe", prix:55, categorie:"California"},
+  {nom:"yone", prix:60, categorie:"California"},
+  {nom:"fresh thon", prix:50, categorie:"Fresh Roll"},
+
+  /* MAKI */
+  {nom:"maki saumon", prix:40, categorie:"Maki"},
+  {nom:"maki ebi", prix:35, categorie:"Maki"},
+  {nom:"maki avocat", prix:30, categorie:"Maki"},
+  {nom:"maki thon", prix:40, categorie:"Maki"},
+  {nom:"maki anguille", prix:45, categorie:"Maki"},
+  {nom:"maki crabe", prix:40, categorie:"Maki"},
+
+  /* NIGIRI */
+  {nom:"nigiri avocat", prix:30, categorie:"Nigiri"},
+  {nom:"nigiri crevettes", prix:35, categorie:"Nigiri"},
+  {nom:"nigiri anguille", prix:40, categorie:"Nigiri"},
+  {nom:"nigiri thon rouge", prix:35, categorie:"Nigiri"},
+  {nom:"nigiri saumon", prix:35, categorie:"Nigiri"},
+  {nom:"nigiri saumon flambé", prix:40, categorie:"Nig
